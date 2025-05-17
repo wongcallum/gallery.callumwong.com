@@ -23,7 +23,7 @@ export default function Home() {
 		<Tabs defaultValue="collection" className="flex min-h-screen flex-row">
 			<div className="flex flex-col gap-2 px-3 py-2 pb-12">
 				<Label className="mt-2">Browse by</Label>
-				<TabsList className="block">
+				<TabsList>
 					<TabsTrigger value="collection">Collections</TabsTrigger>
 					<TabsTrigger value="tag">Tags</TabsTrigger>
 				</TabsList>
@@ -46,9 +46,31 @@ export default function Home() {
 				/>
 				<DatePickerWithRange date={date} setDate={setDate} />
 			</div>
-			<div className="flex-grow border-l p-4">
+			<div className="border-l p-4">
 				<TabsContent value="collection">
 					<Input />
+					<div className="columns-2 gap-4 py-4 sm:columns-3 sm:gap-8">
+						<div className="relative aspect-3/2">
+							<img
+								className="h-full w-full rounded-md object-cover"
+								src="/IMG_0664.jpg"
+							/>
+							<div className="absolute right-0 bottom-0 left-0 flex items-center justify-between rounded-b-md bg-black/60 p-2 text-white">
+								<span className="font-semibold">My Portfolio</span>
+								<span className="text-muted">50 images</span>
+							</div>
+						</div>
+						<div className="relative aspect-3/2">
+							<img
+								className="h-full w-full rounded-md object-cover"
+								src="/IMG_0592.jpg"
+							/>
+							<div className="absolute right-0 bottom-0 left-0 flex items-center justify-between rounded-b-md bg-black/60 p-2 text-white">
+								<span className="font-semibold">Fat Fuck</span>
+								<span className="text-muted">999 images</span>
+							</div>
+						</div>
+					</div>
 				</TabsContent>
 			</div>
 		</Tabs>

@@ -28,7 +28,7 @@ export default async function DashboardLayout({
 						<h1 className="font-medium text-base">Collections</h1>
 					</div>
 				</header>
-				<main className="p-4">{children}</main>
+				<main className="px-4">{children}</main>
 			</SidebarInset>
 		</SidebarProvider>
 	);

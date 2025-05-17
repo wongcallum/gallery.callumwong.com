@@ -2,9 +2,13 @@
 
 import {
 	type ColumnDef,
+	type ColumnFiltersState,
 	flexRender,
 	getCoreRowModel,
+	getFilteredRowModel,
 	getPaginationRowModel,
+	getSortedRowModel,
+	type SortingState,
 	useReactTable,
 } from "@tanstack/react-table";
 
@@ -17,25 +21,53 @@ import {
 	TableRow,
 } from "~/components/ui/table";
 import { DataTablePagination } from "./data-table-pagination";
+import React from "react";
+import { Input } from "./ui/input";
 
 interface DataTableProps<TData, TValue> {
 	columns: ColumnDef<TData, TValue>[];
 	data: TData[];
+	children?: React.ReactNode;
 }
 
 export function DataTable<TData, TValue>({
 	columns,
 	data,
+	children,
 }: DataTableProps<TData, TValue>) {
+	const [sorting, setSorting] = React.useState<SortingState>([]);
+	const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>(
+		[],
+	);
+
 	const table = useReactTable({
 		data,
 		columns,
 		getCoreRowModel: getCoreRowModel(),
 		getPaginationRowModel: getPaginationRowModel(),
+		onSortingChange: setSorting,
+		getSortedRowModel: getSortedRowModel(),
+		onColumnFiltersChange: setColumnFilters,
+		getFilteredRowModel: getFilteredRowModel(),
+		state: {
+			sorting,
+			columnFilters,
+		},
 	});
 
 	return (
 		<div>
+			<div className="flex items-center gap-2 py-4">
+				<Input
+					placeholder="Filter collections..."
+					value={(table.getColumn("name")?.getFilterValue() as string) ?? ""}
+					onChange={(event) =>
+						table.getColumn("name")?.setFilterValue(event.target.value)
+					}
+					className="w-full"
+				/>
+				{children}
+			</div>
 			<div className="rounded-md border">
 				<Table>
 					<TableHeader>

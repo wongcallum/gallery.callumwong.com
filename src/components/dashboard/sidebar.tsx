@@ -1,7 +1,6 @@
-import { auth, signOut } from "~/server/auth";
+import { signOut } from "~/server/auth";
 import {
 	Sidebar,
-	SidebarHeader,
 	SidebarContent,
 	SidebarGroup,
 	SidebarFooter,

@@ -24,7 +24,9 @@ export type Collection = {
 export const columns: ColumnDef<Collection>[] = [
 	{
 		accessorKey: "name",
-		header: "Name",
+		header: ({ column }) => (
+			<DataTableColumnHeader column={column} title="Name" className="ml-2" />
+		),
 	},
 	{
 		accessorKey: "description",
@@ -57,15 +59,9 @@ export const columns: ColumnDef<Collection>[] = [
 							</Button>
 						</DropdownMenuTrigger>
 						<DropdownMenuContent align="end">
-							<DropdownMenuLabel>Actions</DropdownMenuLabel>
-							<DropdownMenuItem
-								onClick={() => navigator.clipboard.writeText(collection.name)}
-							>
-								Copy payment ID
-							</DropdownMenuItem>
-							<DropdownMenuSeparator />
-							<DropdownMenuItem>View customer</DropdownMenuItem>
-							<DropdownMenuItem>View payment details</DropdownMenuItem>
+							<DropdownMenuItem>Modify images</DropdownMenuItem>
+							<DropdownMenuItem>Edit metadata</DropdownMenuItem>
+							<DropdownMenuItem>Delete</DropdownMenuItem>
 						</DropdownMenuContent>
 					</DropdownMenu>
 				</div>

@@ -5,6 +5,7 @@ import type { DateRange } from "react-day-picker";
 import { ComboBox } from "~/components/combobox";
 import { DatePickerWithRange } from "~/components/date-range-picker";
 import { Input } from "~/components/ui/input";
+import { Label } from "~/components/ui/label";
 import { Tabs, TabsList, TabsContent, TabsTrigger } from "~/components/ui/tabs";
 import { api } from "~/trpc/react";
 
@@ -20,13 +21,13 @@ export default function Home() {
 
 	return (
 		<Tabs defaultValue="collection" className="flex min-h-screen flex-row">
-			<div className="flex flex-col px-3 py-2 pb-12">
-				<h2>Browse by</h2>
+			<div className="flex flex-col gap-2 px-3 py-2 pb-12">
+				<Label className="mt-2">Browse by</Label>
 				<TabsList className="block">
 					<TabsTrigger value="collection">Collections</TabsTrigger>
 					<TabsTrigger value="tag">Tags</TabsTrigger>
 				</TabsList>
-				<h2>Filter</h2>
+				<Label className="mt-2">Filter</Label>
 				<ComboBox
 					value={camera}
 					setValue={setCamera}

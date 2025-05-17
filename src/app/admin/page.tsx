@@ -1,5 +1,6 @@
 import Link from "next/link";
-import { auth } from "~/server/auth";
+import { Button } from "~/components/ui/button";
+import { auth, signIn, signOut } from "~/server/auth";
 import { HydrateClient, api } from "~/trpc/server";
 
 export default async function Admin() {
@@ -7,13 +8,22 @@ export default async function Admin() {
 
 	if (session?.user) {
 		void api.post.getLatest.prefetch();
+	} else {
+		await signIn(undefined, {
+			redirectTo: "/admin",
+		});
 	}
 
 	return (
 		<HydrateClient>
-			<Link href={session ? "/api/auth/signout" : "/api/auth/signin"}>
-				{session ? "Sign out" : "Sign in"}
-			</Link>
+			<form
+				action={async () => {
+					"use server";
+					await signOut();
+				}}
+			>
+				<Button type="submit">Sign Out</Button>
+			</form>
 		</HydrateClient>
 	);
 }

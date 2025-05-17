@@ -1,29 +1,14 @@
-import Link from "next/link";
-import { Button } from "~/components/ui/button";
-import { auth, signIn, signOut } from "~/server/auth";
-import { HydrateClient, api } from "~/trpc/server";
+import { redirect } from "next/navigation";
+import { auth, signIn } from "~/server/auth";
 
 export default async function Admin() {
 	const session = await auth();
 
 	if (session?.user) {
-		void api.post.getLatest.prefetch();
+		redirect("/admin/dashboard/collections");
 	} else {
 		await signIn(undefined, {
-			redirectTo: "/admin",
+			redirectTo: "/admin/dashboard/collections",
 		});
 	}
-
-	return (
-		<HydrateClient>
-			<form
-				action={async () => {
-					"use server";
-					await signOut();
-				}}
-			>
-				<Button type="submit">Sign Out</Button>
-			</form>
-		</HydrateClient>
-	);
 }

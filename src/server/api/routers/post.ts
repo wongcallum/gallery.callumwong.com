@@ -8,12 +8,22 @@ import {
 import { posts } from "~/server/db/schema";
 
 export const postRouter = createTRPCRouter({
-	hello: publicProcedure
-		.input(z.object({ text: z.string() }))
-		.query(({ input }) => {
-			return {
-				greeting: `Hello ${input.text}`,
-			};
+	cameras: publicProcedure.query(() => {
+			return [
+				{
+					model: "Canon EOS 700D",
+					serial: "185032001826"
+				}
+			];
+		}),
+
+	lens: publicProcedure.query(() => {
+			return [
+				{
+					model: "EF-S18-55mm f/3.5-5.6 IS STM",
+					serial: "0000323061"
+				}
+			];
 		}),
 
 	create: protectedProcedure

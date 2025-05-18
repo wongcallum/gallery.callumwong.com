@@ -4,18 +4,45 @@ import { useState, useCallback, useEffect } from "react";
 import { Button } from "~/components/ui/button";
 import { useDropzone } from "react-dropzone";
 import { Checkbox } from "~/components/ui/checkbox";
-import { Label } from "~/components/ui/label";
 import { Combobox } from "~/components/combobox";
-import { TagInput } from "~/components/tag-input";
+import { Input } from "~/components/ui/input";
+import { z } from "zod";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import {
+	Form,
+	FormControl,
+	FormField,
+	FormItem,
+	FormLabel,
+	FormMessage,
+} from "~/components/ui/form";
 
 type PreviewFile = File & {
 	preview: string;
 };
 
-export default function ImportPage() {
-	const [collection, setCollection] = useState<string>();
+const formSchema = z.object({
+	files: z.array(z.any()),
+	exif: z.boolean().optional(),
+	collection: z.string().optional(),
+	tags: z.string().optional(),
+});
 
+export default function ImportPage() {
 	const [files, setFiles] = useState<PreviewFile[]>([]);
+
+	const form = useForm<z.infer<typeof formSchema>>({
+		resolver: zodResolver(formSchema),
+		defaultValues: {
+			files: [],
+			exif: false,
+		},
+	});
+
+	function onSubmit(values: z.infer<typeof formSchema>) {
+		console.log(values);
+	}
 
 	const onDrop = useCallback((acceptedFiles: File[]) => {
 		const mappedFiles: PreviewFile[] = acceptedFiles.map((file) =>
@@ -84,31 +111,68 @@ export default function ImportPage() {
 				))}
 			</div>
 
-			<div className="mt-4 flex flex-col gap-2">
-				<div className="flex items-center space-x-2">
-					<Checkbox id="exif" />
-					<Label htmlFor="exif">Import EXIF data</Label>
-				</div>
-				<div className="flex items-center space-x-2">
-					<Label htmlFor="exif">Add all to collection:</Label>
-					<Combobox
-						id="exif"
-						options={[
-							{
-								value: "1",
-								label: "My Portfolio",
-							},
-						]}
-						placeholder="None"
-						value={collection}
-						setValue={setCollection}
+			<Form {...form}>
+				<form
+					onSubmit={form.handleSubmit(onSubmit)}
+					className="mt-4 flex flex-col gap-2 text-nowrap"
+				>
+					<FormField
+						control={form.control}
+						name="exif"
+						render={({ field }) => (
+							<FormItem className="flex">
+								<FormControl>
+									<Checkbox
+										checked={field.value}
+										onCheckedChange={field.onChange}
+									/>
+								</FormControl>
+								<FormLabel>Import EXIF data</FormLabel>
+								<FormMessage />
+							</FormItem>
+						)}
 					/>
-				</div>
-				<div className="flex items-center space-x-2">
-					<Label htmlFor="exif">Apply tags to all:</Label>
-				</div>
-				<Button className="w-fit">Import</Button>
-			</div>
+					<FormField
+						control={form.control}
+						name="collection"
+						render={({ field }) => (
+							<FormItem className="flex">
+								<FormLabel>Language</FormLabel>
+								<Combobox
+									id="Add to collection:"
+									options={[
+										{
+											value: "1",
+											label: "My Portfolio",
+										},
+									]}
+									placeholder="None"
+									value={field.value}
+									setValue={(value) => form.setValue("collection", value)}
+								/>
+								<FormMessage />
+							</FormItem>
+						)}
+					/>
+					<FormField
+						control={form.control}
+						name="tags"
+						render={({ field }) => (
+							<FormItem className="flex">
+								<FormLabel>Apply tags:</FormLabel>
+								<FormControl>
+									<Input
+										placeholder="Add tags separated by commas"
+										{...field}
+									/>
+								</FormControl>
+								<FormMessage />
+							</FormItem>
+						)}
+					/>
+					<Button type="submit">Import</Button>
+				</form>
+			</Form>
 		</div>
 	);
 }

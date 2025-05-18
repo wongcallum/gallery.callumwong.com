@@ -18,6 +18,7 @@ import {
 	PopoverContent,
 	PopoverTrigger,
 } from "~/components/ui/popover";
+import { FormControl } from "./ui/form";
 
 interface ComboBoxOption {
 	value: string;
@@ -26,9 +27,10 @@ interface ComboBoxOption {
 
 interface ComboBoxProps {
 	options: ComboBoxOption[];
-	value: string | undefined;
+	value?: string;
 	setValue: (value: string) => void;
 	placeholder: string;
+	formControl?: boolean;
 }
 
 export function Combobox({
@@ -36,26 +38,31 @@ export function Combobox({
 	value,
 	setValue,
 	placeholder,
+	formControl,
 	...props
 }: ComboBoxProps & React.ComponentProps<"button">) {
 	const [open, setOpen] = React.useState(false);
 
+	const trigger = (
+		<Button
+			variant="outline"
+			// biome-ignore lint/a11y/useSemanticElements: <explanation>
+			role="combobox"
+			aria-expanded={open}
+			className="justify-between"
+			{...props}
+		>
+			{value
+				? options.find((framework) => framework.value === value)?.label
+				: placeholder}
+			<ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+		</Button>
+	);
+
 	return (
 		<Popover open={open} onOpenChange={setOpen}>
 			<PopoverTrigger asChild>
-				<Button
-					variant="outline"
-					// biome-ignore lint/a11y/useSemanticElements: <explanation>
-					role="combobox"
-					aria-expanded={open}
-					className="justify-between"
-					{...props}
-				>
-					{value
-						? options.find((framework) => framework.value === value)?.label
-						: placeholder}
-					<ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-				</Button>
+				{formControl ? <FormControl>{trigger}</FormControl> : trigger}
 			</PopoverTrigger>
 			<PopoverContent className="p-0">
 				<Command>

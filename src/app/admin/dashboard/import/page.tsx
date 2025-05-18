@@ -24,9 +24,12 @@ type PreviewFile = File & {
 
 const formSchema = z.object({
 	files: z.array(z.any()),
-	exif: z.boolean().optional(),
-	collection: z.string().optional(),
-	tags: z.string().optional(),
+	exif: z.boolean(),
+	collection: z.string(),
+	tags: z
+		.string()
+		.toLowerCase()
+		.refine((value) => /[ -~]/.test(value)),
 });
 
 export default function ImportPage() {
@@ -37,6 +40,8 @@ export default function ImportPage() {
 		defaultValues: {
 			files: [],
 			exif: false,
+			collection: "",
+			tags: "",
 		},
 	});
 
@@ -120,7 +125,7 @@ export default function ImportPage() {
 						control={form.control}
 						name="exif"
 						render={({ field }) => (
-							<FormItem className="flex">
+							<FormItem className="flex items-center">
 								<FormControl>
 									<Checkbox
 										checked={field.value}
@@ -136,10 +141,10 @@ export default function ImportPage() {
 						control={form.control}
 						name="collection"
 						render={({ field }) => (
-							<FormItem className="flex">
-								<FormLabel>Language</FormLabel>
+							<FormItem className="flex items-center">
+								<FormLabel>Add to collection:</FormLabel>
 								<Combobox
-									id="Add to collection:"
+									id="collection"
 									options={[
 										{
 											value: "1",
@@ -158,11 +163,11 @@ export default function ImportPage() {
 						control={form.control}
 						name="tags"
 						render={({ field }) => (
-							<FormItem className="flex">
+							<FormItem className="flex items-center">
 								<FormLabel>Apply tags:</FormLabel>
 								<FormControl>
 									<Input
-										placeholder="Add tags separated by commas"
+										placeholder="Add tags separated by spaces"
 										{...field}
 									/>
 								</FormControl>

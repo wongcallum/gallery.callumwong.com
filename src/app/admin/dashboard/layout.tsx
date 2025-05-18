@@ -1,5 +1,4 @@
 import type React from "react";
-import { DashboardSidebar } from "./_components/sidebar";
 import { Separator } from "~/components/ui/separator";
 import {
 	SidebarInset,
@@ -7,6 +6,7 @@ import {
 	SidebarTrigger,
 } from "~/components/ui/sidebar";
 import { auth, signIn } from "~/server/auth";
+import { DashboardSidebar } from "./_components/sidebar";
 
 export default async function DashboardLayout({
 	children,

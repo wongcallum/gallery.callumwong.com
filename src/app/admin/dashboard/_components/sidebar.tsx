@@ -1,16 +1,16 @@
 import { signOut } from "~/server/auth";
+import { Button } from "../../../../components/ui/button";
 import {
 	Sidebar,
 	SidebarContent,
-	SidebarGroup,
 	SidebarFooter,
-	SidebarGroupLabel,
+	SidebarGroup,
 	SidebarGroupContent,
+	SidebarGroupLabel,
 	SidebarMenu,
 	SidebarMenuButton,
 	SidebarMenuItem,
 } from "../../../../components/ui/sidebar";
-import { Button } from "../../../../components/ui/button";
 
 const items = [
 	{

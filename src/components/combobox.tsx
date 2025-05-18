@@ -31,7 +31,13 @@ interface ComboBoxProps {
 	placeholder: string;
 }
 
-export function ComboBox(props: ComboBoxProps) {
+export function Combobox({
+	options,
+	value,
+	setValue,
+	placeholder,
+	...props
+}: ComboBoxProps & React.ComponentProps<"button">) {
 	const [open, setOpen] = React.useState(false);
 
 	return (
@@ -43,11 +49,11 @@ export function ComboBox(props: ComboBoxProps) {
 					role="combobox"
 					aria-expanded={open}
 					className="justify-between"
+					{...props}
 				>
-					{props.value
-						? props.options.find((framework) => framework.value === props.value)
-								?.label
-						: props.placeholder}
+					{value
+						? options.find((framework) => framework.value === value)?.label
+						: placeholder}
 					<ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
 				</Button>
 			</PopoverTrigger>
@@ -57,23 +63,19 @@ export function ComboBox(props: ComboBoxProps) {
 					<CommandList>
 						<CommandEmpty>Nothing to be seen here...</CommandEmpty>
 						<CommandGroup>
-							{props.options.map((option) => (
+							{options.map((option) => (
 								<CommandItem
 									key={option.value}
 									value={option.value}
 									onSelect={(currentValue) => {
-										props.setValue(
-											currentValue === props.value ? "" : currentValue,
-										);
+										setValue(currentValue === value ? "" : currentValue);
 										setOpen(false);
 									}}
 								>
 									<Check
 										className={cn(
 											"mr-2 h-4 w-4",
-											props.value === option.value
-												? "opacity-100"
-												: "opacity-0",
+											value === option.value ? "opacity-100" : "opacity-0",
 										)}
 									/>
 									{option.label}

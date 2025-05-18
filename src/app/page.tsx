@@ -2,7 +2,7 @@
 
 import React from "react";
 import type { DateRange } from "react-day-picker";
-import { ComboBox } from "~/components/combobox";
+import { Combobox } from "~/components/combobox";
 import { DatePickerWithRange } from "~/components/date-range-picker";
 import { Input } from "~/components/ui/input";
 import { Label } from "~/components/ui/label";
@@ -28,7 +28,7 @@ export default function Home() {
 					<TabsTrigger value="tag">Tags</TabsTrigger>
 				</TabsList>
 				<Label className="mt-2">Filter</Label>
-				<ComboBox
+				<Combobox
 					value={camera}
 					setValue={setCamera}
 					placeholder="All cameras"
@@ -36,7 +36,7 @@ export default function Home() {
 						return { value: camera.serial, label: camera.model };
 					})}
 				/>
-				<ComboBox
+				<Combobox
 					value={lens}
 					setValue={setLens}
 					placeholder="All lenses"
@@ -66,7 +66,7 @@ export default function Home() {
 								src="/IMG_0592.jpg"
 							/>
 							<div className="absolute right-0 bottom-0 left-0 flex items-center justify-between rounded-b-md bg-black/60 p-2 text-white">
-								<span className="font-semibold">Fat Fuck</span>
+								<span className="font-semibold">Fat</span>
 								<span className="text-muted">999 images</span>
 							</div>
 						</div>

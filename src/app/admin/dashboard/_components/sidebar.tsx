@@ -9,17 +9,13 @@ import {
 	SidebarMenu,
 	SidebarMenuButton,
 	SidebarMenuItem,
-} from "../ui/sidebar";
-import { Button } from "../ui/button";
+} from "../../../../components/ui/sidebar";
+import { Button } from "../../../../components/ui/button";
 
 const items = [
 	{
 		title: "Collections",
 		url: "/admin/dashboard/collections",
-	},
-	{
-		title: "Tags",
-		url: "/admin/dashboard/tags",
 	},
 	{
 		title: "Photos",

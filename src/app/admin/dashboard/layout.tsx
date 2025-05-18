@@ -1,5 +1,5 @@
 import type React from "react";
-import { DashboardSidebar } from "~/components/dashboard/sidebar";
+import { DashboardSidebar } from "./_components/sidebar";
 import { Separator } from "~/components/ui/separator";
 import {
 	SidebarInset,
@@ -28,7 +28,7 @@ export default async function DashboardLayout({
 						<h1 className="font-medium text-base">Collections</h1>
 					</div>
 				</header>
-				<main className="px-4">{children}</main>
+				<div className="px-4">{children}</div>
 			</SidebarInset>
 		</SidebarProvider>
 	);

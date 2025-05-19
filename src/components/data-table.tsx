@@ -25,12 +25,16 @@ import { DataTablePagination } from "./data-table-pagination";
 import { Input } from "./ui/input";
 
 interface DataTableProps<TData, TValue> {
+	filterPlaceholder: string;
+	filterColumn: string;
 	columns: ColumnDef<TData, TValue>[];
 	data: TData[];
 	children?: React.ReactNode;
 }
 
 export function DataTable<TData, TValue>({
+	filterPlaceholder,
+	filterColumn,
 	columns,
 	data,
 	children,
@@ -59,10 +63,12 @@ export function DataTable<TData, TValue>({
 		<div>
 			<div className="flex items-center gap-2 py-4">
 				<Input
-					placeholder="Filter collections..."
-					value={(table.getColumn("name")?.getFilterValue() as string) ?? ""}
+					placeholder={filterPlaceholder}
+					value={
+						(table.getColumn(filterColumn)?.getFilterValue() as string) ?? ""
+					}
 					onChange={(event) =>
-						table.getColumn("name")?.setFilterValue(event.target.value)
+						table.getColumn(filterColumn)?.setFilterValue(event.target.value)
 					}
 					className="w-full"
 				/>

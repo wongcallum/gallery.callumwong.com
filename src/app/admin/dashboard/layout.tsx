@@ -25,7 +25,9 @@ export default async function DashboardLayout({
 							orientation="vertical"
 							className="mx-2 data-[orientation=vertical]:h-4"
 						/>
-						<h1 className="font-medium text-base">Collections</h1>
+						<h1 className="font-medium text-base">
+							Welcome, {session?.user.email}
+						</h1>
 					</div>
 				</header>
 				<div className="px-4">{children}</div>

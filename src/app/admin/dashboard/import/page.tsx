@@ -26,10 +26,7 @@ const formSchema = z.object({
 	files: z.array(z.any()),
 	exif: z.boolean(),
 	collection: z.string(),
-	tags: z
-		.string()
-		.toLowerCase()
-		.refine((value) => /[ -~]/.test(value)),
+	tags: z.string(),
 });
 
 export default function ImportPage() {

@@ -1,5 +1,4 @@
 "use client";
-
 import React from "react";
 import type { DateRange } from "react-day-picker";
 import { Combobox } from "~/components/combobox";
@@ -51,25 +50,37 @@ export default function Home() {
 					<Input />
 					<div className="columns-2 gap-4 py-4 sm:columns-3 sm:gap-8">
 						<div className="relative aspect-3/2">
+							{/* biome-ignore lint/a11y/useAltText: <explanation> */}
 							<img
 								className="h-full w-full rounded-md object-cover"
 								src="/IMG_0664.jpg"
 							/>
 							<div className="absolute right-0 bottom-0 left-0 flex items-center justify-between rounded-b-md bg-black/60 p-2 text-white">
 								<span className="font-semibold">My Portfolio</span>
-								<span className="text-muted">50 images</span>
+								<span>50 images</span>
 							</div>
 						</div>
 						<div className="relative aspect-3/2">
+							{/* biome-ignore lint/a11y/useAltText: <explanation> */}
 							<img
 								className="h-full w-full rounded-md object-cover"
 								src="/IMG_0592.jpg"
 							/>
 							<div className="absolute right-0 bottom-0 left-0 flex items-center justify-between rounded-b-md bg-black/60 p-2 text-white">
 								<span className="font-semibold">Fat</span>
-								<span className="text-muted">999 images</span>
+								<span>999 images</span>
 							</div>
 						</div>
+					</div>
+				</TabsContent>
+				<TabsContent value="tag">
+					{/* TODO: tag input (probably react-tag-autocomplete) */}
+					<Input />
+					<div className="columns-2 gap-4 space-y-4 py-4 sm:columns-3 sm:gap-8 sm:space-y-8 lg:columns-6">
+						{/* biome-ignore lint/a11y/useAltText: <explanation> */}
+						<img className="rounded-md" src="/IMG_0664.jpg" />
+						{/* biome-ignore lint/a11y/useAltText: <explanation> */}
+						<img className="rounded-md" src="/IMG_0592.jpg" />
 					</div>
 				</TabsContent>
 			</div>

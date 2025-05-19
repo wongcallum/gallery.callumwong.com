@@ -18,8 +18,8 @@ const items = [
 		url: "/admin/dashboard/collections",
 	},
 	{
-		title: "Photos",
-		url: "/admin/dashboard/photos",
+		title: "Tags",
+		url: "/admin/dashboard/tags",
 	},
 	{
 		title: "Import",

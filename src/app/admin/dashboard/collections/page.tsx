@@ -15,6 +15,8 @@ import { columns } from "./columns";
 export default async function CollectionsPage() {
 	return (
 		<DataTable
+			filterPlaceholder="Filter collections..."
+			filterColumn="name"
 			columns={columns}
 			data={[
 				{

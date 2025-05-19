@@ -1,6 +1,6 @@
 "use client";
 
-import type { ColumnDef as CollectionColumnDef } from "@tanstack/react-table";
+import type { ColumnDef as TagColumnDef } from "@tanstack/react-table";
 import { MoreHorizontal } from "lucide-react";
 import { DataTableColumnHeader } from "~/components/data-table-column-header";
 
@@ -12,28 +12,16 @@ import {
 	DropdownMenuTrigger,
 } from "~/components/ui/dropdown-menu";
 
-export type Collection = {
-	name: string;
-	description: string;
-	location: string;
+export type Tag = {
+	tag: string;
 	images: number;
 };
 
-export const columns: CollectionColumnDef<Collection>[] = [
+export const columns: TagColumnDef<Tag>[] = [
 	{
-		accessorKey: "name",
+		accessorKey: "tag",
 		header: ({ column }) => (
 			<DataTableColumnHeader column={column} title="Name" className="ml-2" />
-		),
-	},
-	{
-		accessorKey: "description",
-		header: "Description",
-	},
-	{
-		accessorKey: "location",
-		header: ({ column }) => (
-			<DataTableColumnHeader column={column} title="Location" />
 		),
 	},
 	{
@@ -57,8 +45,7 @@ export const columns: CollectionColumnDef<Collection>[] = [
 							</Button>
 						</DropdownMenuTrigger>
 						<DropdownMenuContent align="end">
-							<DropdownMenuItem>Modify images</DropdownMenuItem>
-							<DropdownMenuItem>Edit metadata</DropdownMenuItem>
+							<DropdownMenuItem>Bulk rename</DropdownMenuItem>
 							<DropdownMenuItem>Delete</DropdownMenuItem>
 						</DropdownMenuContent>
 					</DropdownMenu>

@@ -12,26 +12,96 @@ export const createTable = sqliteTableCreator(
 	(name) => `gallery.callumwong.com_${name}`,
 );
 
-export const posts = createTable(
-	"post",
+export const collections = createTable("collection", (d) => ({
+	id: d.integer().primaryKey({ autoIncrement: true }),
+	createdById: d
+		.text({ length: 255 })
+		.notNull()
+		.references(() => users.id),
+	name: d.text().notNull(),
+	description: d.text().notNull(),
+	thumbnailPhotoURL: d.text(),
+}));
+
+export const collectionsRelations = relations(collections, ({ one, many }) => ({
+	createdBy: one(users, {
+		fields: [collections.createdById],
+		references: [users.id],
+	}),
+	thumbnailPhoto: one(photos, {
+		fields: [collections.thumbnailPhotoURL],
+		references: [photos.url],
+	}),
+	photos: many(photos),
+}));
+
+export const photos = createTable(
+	"photo",
 	(d) => ({
-		id: d.integer({ mode: "number" }).primaryKey({ autoIncrement: true }),
-		name: d.text({ length: 256 }),
-		createdById: d
+		id: d.text().primaryKey(),
+		collectionId: d.integer().references(() => collections.id),
+		uploadedById: d
 			.text({ length: 255 })
 			.notNull()
 			.references(() => users.id),
-		createdAt: d
+		takenAt: d
 			.integer({ mode: "timestamp" })
-			.default(sql`(unixepoch())`)
+			// .default(sql`(unixepoch())`)
 			.notNull(),
-		updatedAt: d.integer({ mode: "timestamp" }).$onUpdate(() => new Date()),
+		aperture: d.real(),
+		shutterSpeed: d.real(),
+		focalLength: d.integer(),
+		isoSpeed: d.integer(),
+		title: d.text({ length: 256 }),
+		url: d.text({ length: 2048 }).notNull(),
 	}),
 	(t) => [
-		index("created_by_idx").on(t.createdById),
-		index("name_idx").on(t.name),
+		index("uploaded_by_idx").on(t.uploadedById),
+		index("collection_idx").on(t.collectionId),
 	],
 );
+
+export const photosRelations = relations(photos, ({ one, many }) => ({
+	collection: one(collections, {
+		fields: [photos.collectionId],
+		references: [collections.id],
+	}),
+	photosToTags: many(photosToTags),
+}));
+
+export const tags = createTable("tag", (d) => ({
+	id: d.text({ length: 256 }).unique().primaryKey(),
+}));
+
+export const tagsRelations = relations(tags, ({ many }) => ({
+	photosToTags: many(photosToTags),
+}));
+
+export const photosToTags = createTable(
+	"photos_to_tags",
+	(d) => ({
+		photoId: d
+			.text()
+			.notNull()
+			.references(() => photos.id),
+		tagId: d
+			.text({ length: 256 })
+			.notNull()
+			.references(() => tags.id),
+	}),
+	(t) => [primaryKey({ columns: [t.photoId, t.tagId] })],
+);
+
+export const photosToTagsRelations = relations(photosToTags, ({ one }) => ({
+	tag: one(tags, {
+		fields: [photosToTags.tagId],
+		references: [tags.id],
+	}),
+	photo: one(photos, {
+		fields: [photosToTags.photoId],
+		references: [photos.id],
+	}),
+}));
 
 export const users = createTable("user", (d) => ({
 	id: d

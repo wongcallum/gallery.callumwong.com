@@ -9,8 +9,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "~/components/ui/tabs";
 import { api } from "~/trpc/react";
 
 export default function Home() {
-	const cameras = api.post.cameras.useQuery();
-	const lenses = api.post.lens.useQuery();
+	const cameras = api.filter.cameras.useQuery();
+	const lenses = api.filter.lens.useQuery();
 
 	const [camera, setCamera] = React.useState<string>();
 	const [lens, setLens] = React.useState<string>();

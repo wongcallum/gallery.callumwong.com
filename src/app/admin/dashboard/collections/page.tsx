@@ -10,28 +10,18 @@ import {
 } from "~/components/ui/dialog";
 import { Input } from "~/components/ui/input";
 import { Label } from "~/components/ui/label";
+import { api } from "~/trpc/react";
 import { columns } from "./columns";
 
 export default async function CollectionsPage() {
+	const collections = api.collection.all.useQuery();
+
 	return (
 		<DataTable
 			filterPlaceholder="Filter collections..."
 			filterColumn="name"
 			columns={columns}
-			data={[
-				{
-					name: "Japan 2023-24",
-					description: "Japan",
-					images: 1,
-					location: "Japan",
-				},
-				{
-					name: "Hong Kong 2024-25",
-					description: "asddad",
-					images: 51,
-					location: "Hong Kong",
-				},
-			]}
+			data={collections.data ?? []}
 		>
 			<Dialog>
 				<DialogTrigger asChild>

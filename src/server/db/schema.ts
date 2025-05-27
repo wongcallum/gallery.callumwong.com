@@ -20,6 +20,7 @@ export const collections = createTable("collection", (d) => ({
 		.references(() => users.id),
 	name: d.text().notNull(),
 	description: d.text().notNull(),
+	location: d.text().default("").notNull(),
 	thumbnailPhotoURL: d.text(),
 }));
 
@@ -52,6 +53,8 @@ export const photos = createTable(
 		shutterSpeed: d.real(),
 		focalLength: d.integer(),
 		isoSpeed: d.integer(),
+		cameraSerial: d.integer().references(() => cameras.id),
+		lensSerial: d.integer().references(() => lenses.id),
 		title: d.text({ length: 256 }),
 		url: d.text({ length: 2048 }).notNull(),
 	}),
@@ -67,6 +70,26 @@ export const photosRelations = relations(photos, ({ one, many }) => ({
 		references: [collections.id],
 	}),
 	photosToTags: many(photosToTags),
+	camera: one(cameras, {
+		fields: [photos.cameraSerial],
+		references: [cameras.serial],
+	}),
+	lens: one(lenses, {
+		fields: [photos.lensSerial],
+		references: [lenses.serial],
+	}),
+}));
+
+export const cameras = createTable("camera", (d) => ({
+	id: d.integer().primaryKey({ autoIncrement: true }),
+	serial: d.integer().unique(),
+	name: d.text().notNull(),
+}));
+
+export const lenses = createTable("lens", (d) => ({
+	id: d.integer().primaryKey({ autoIncrement: true }),
+	serial: d.integer().unique(),
+	name: d.text().notNull(),
 }));
 
 export const tags = createTable("tag", (d) => ({

@@ -1,4 +1,5 @@
-import { collectionRouter } from "~/server/api/routers/collection";
+import { collectionRouter } from "~/server/api/routers/collections";
+import { photoRouter } from "~/server/api/routers/photos";
 import { createCallerFactory, createTRPCRouter } from "~/server/api/trpc";
 import { filterRouter } from "./routers/filter";
 
@@ -9,7 +10,8 @@ import { filterRouter } from "./routers/filter";
  */
 export const appRouter = createTRPCRouter({
 	filter: filterRouter,
-	collection: collectionRouter,
+	collections: collectionRouter,
+	photos: photoRouter,
 });
 
 // export type definition of API

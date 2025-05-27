@@ -5,13 +5,13 @@ import { useState } from "react";
 import { api } from "~/trpc/react";
 
 export function LatestPost() {
-	const [latestPost] = api.collection.getLatest.useSuspenseQuery();
+	const [latestPost] = api.collections.getLatest.useSuspenseQuery();
 
 	const utils = api.useUtils();
 	const [name, setName] = useState("");
-	const createPost = api.collection.create.useMutation({
+	const createPost = api.collections.create.useMutation({
 		onSuccess: async () => {
-			await utils.collection.invalidate();
+			await utils.collections.invalidate();
 			setName("");
 		},
 	});

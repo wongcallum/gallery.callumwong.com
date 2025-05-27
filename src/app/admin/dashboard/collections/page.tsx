@@ -10,18 +10,18 @@ import {
 } from "~/components/ui/dialog";
 import { Input } from "~/components/ui/input";
 import { Label } from "~/components/ui/label";
-import { api } from "~/trpc/react";
+import { api } from "~/trpc/server";
 import { columns } from "./columns";
 
 export default async function CollectionsPage() {
-	const collections = api.collection.all.useQuery();
+	const collections = await api.collections.all();
 
 	return (
 		<DataTable
 			filterPlaceholder="Filter collections..."
 			filterColumn="name"
 			columns={columns}
-			data={collections.data ?? []}
+			data={collections}
 		>
 			<Dialog>
 				<DialogTrigger asChild>

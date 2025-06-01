@@ -1,9 +1,10 @@
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useCallback, useEffect, useState } from "react";
+import { ImageUpIcon } from "lucide-react";
+import { useCallback, useEffect } from "react";
 import { useDropzone } from "react-dropzone";
-import { useForm } from "react-hook-form";
+import { useFieldArray, useForm } from "react-hook-form";
 import { z } from "zod";
 import { Combobox } from "~/components/combobox";
 import { Button } from "~/components/ui/button";
@@ -17,68 +18,84 @@ import {
 	FormMessage,
 } from "~/components/ui/form";
 import { Input } from "~/components/ui/input";
-
-type PreviewFile = File & {
-	preview: string;
-};
+import { cn } from "~/lib/utils";
 
 const formSchema = z.object({
-	files: z.array(z.any()),
 	exif: z.boolean(),
 	collection: z.string(),
 	tags: z.string(),
+	images: z.array(
+		z.object({
+			value: z.custom<File>(),
+		}),
+		{ message: "Please upload at least one image." },
+	),
 });
 
 export default function ImportPage() {
-	const [files, setFiles] = useState<PreviewFile[]>([]);
-
 	const form = useForm<z.infer<typeof formSchema>>({
 		resolver: zodResolver(formSchema),
 		defaultValues: {
-			files: [],
 			exif: false,
 			collection: "",
 			tags: "",
 		},
 	});
 
-	function onSubmit(values: z.infer<typeof formSchema>) {
-		console.log(values);
-	}
+	const {
+		fields: imageFields,
+		append: appendImage,
+		remove: removeImage,
+	} = useFieldArray({
+		name: "images",
+		control: form.control,
+	});
 
-	const onDrop = useCallback((acceptedFiles: File[]) => {
-		const mappedFiles: PreviewFile[] = acceptedFiles.map((file) =>
-			Object.assign(file, {
-				preview: URL.createObjectURL(file),
-			}),
-		);
-		setFiles((prev) => [...prev, ...mappedFiles]);
-	}, []);
+	const onDrop = useCallback(
+		async (acceptedFiles: File[]) => {
+			appendImage(acceptedFiles.map((file) => ({ value: file })));
+			await form.trigger("images");
+		},
+		[appendImage, form],
+	);
 
-	const { getRootProps, getInputProps, isDragActive } = useDropzone({
+	const {
+		getRootProps,
+		getInputProps,
+		isDragActive,
+		isDragReject,
+		fileRejections,
+		open,
+	} = useDropzone({
 		onDrop,
+		maxFiles: 10,
+		maxSize: 25 * 1024 * 1024,
 		accept: {
 			"image/*": [],
 		},
 		multiple: true,
 	});
 
-	const removeFile = (file: PreviewFile) => {
-		setFiles((prev) => prev.filter((f) => f !== file));
-		URL.revokeObjectURL(file.preview); // Free memory
-	};
+	function onSubmit(data: z.infer<typeof formSchema>) {
+		console.log(JSON.stringify(data, null, 2));
+	}
 
 	useEffect(() => {
-		return () => {
-			for (const file of files) {
-				URL.revokeObjectURL(file.preview);
+		if (fileRejections.length > 0) {
+			const errorType = fileRejections[0]?.errors[0]?.code;
+			if (errorType === "file-invalid-type") {
+				console.log("Please upload a file with the correct format");
+			} else if (errorType === "file-too-large") {
+				console.log("Please upload a file with the correct size");
+			} else {
+				console.log("There was a problem with your request. Please try again");
 			}
-		};
-	}, [files]);
+		}
+	}, [fileRejections]);
 
 	return (
 		<div className="py-4">
-			<div
+			{/* <div
 				{...getRootProps()}
 				className="dashed cursor-pointer rounded-md border-2 p-16 text-center"
 			>
@@ -111,13 +128,90 @@ export default function ImportPage() {
 						</Button>
 					</div>
 				))}
-			</div>
+			</div> */}
 
 			<Form {...form}>
 				<form
 					onSubmit={form.handleSubmit(onSubmit)}
 					className="mt-4 flex flex-col gap-2 text-nowrap"
 				>
+					{/* start dropzone */}
+					<FormField
+						control={form.control}
+						name="images"
+						render={() => (
+							<FormItem>
+								<FormLabel>Images</FormLabel>
+								<div
+									className={cn(
+										"relative flex flex-col items-center justify-center rounded-lg border border-dashed px-4 py-10",
+										{
+											"border-green-500 bg-green-500/10":
+												isDragActive && !isDragReject,
+											"border-destructive bg-destructive/10":
+												isDragActive && isDragReject,
+											"border-border bg-card": !isDragActive,
+										},
+									)}
+									{...getRootProps()}
+								>
+									<input {...getInputProps()} id="images" />
+									<ImageUpIcon className="h-12 w-12 fill-primary/75" />
+									<div className="mt-4 mb-2">
+										Drop or{" "}
+										<span
+											onClick={() => open()}
+											className="cursor-pointer text-primary hover:underline"
+										>
+											select
+										</span>
+									</div>
+									<span
+										className={cn(
+											"-translate-x-1/2 absolute bottom-2 left-1/2 text-xs",
+											{
+												"text-destructive":
+													isDragReject || fileRejections.length > 0,
+												"text-muted-foreground":
+													!isDragReject && !(fileRejections.length > 0),
+											},
+										)}
+									>
+										Max size: 25MiB
+									</span>
+								</div>
+								<FormMessage />
+							</FormItem>
+						)}
+					/>
+					<div className="mt-2 grid grid-cols-5 gap-2">
+						{imageFields.map((field, index) => (
+							<div
+								key={field.id}
+								className="flex flex-col items-center text-center"
+							>
+								<img
+									src={URL.createObjectURL(field.value)}
+									alt={field.value.name}
+									className="rounded-md"
+								/>
+								<p className="my-1 text-sm">{field.value.name}</p>
+								<p className="mb-1 text-muted-foreground text-xs">
+									{(field.value.size / 1024).toFixed(1)} kB
+								</p>
+								<Button
+									variant="destructive"
+									onClick={() => removeImage(index)}
+									size="sm"
+									className="w-full"
+								>
+									Remove
+								</Button>
+							</div>
+						))}
+					</div>
+					{/* end dropzone */}
+
 					<FormField
 						control={form.control}
 						name="exif"

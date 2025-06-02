@@ -5,7 +5,7 @@ import { ImageUpIcon } from "lucide-react";
 import { useCallback, useEffect } from "react";
 import { useDropzone } from "react-dropzone";
 import { useFieldArray, useForm } from "react-hook-form";
-import { z } from "zod";
+import type { z } from "zod";
 import { Combobox } from "~/components/combobox";
 import { Button } from "~/components/ui/button";
 import { Checkbox } from "~/components/ui/checkbox";
@@ -18,23 +18,15 @@ import {
 	FormMessage,
 } from "~/components/ui/form";
 import { Input } from "~/components/ui/input";
+import { importFormSchema } from "~/lib/schemas";
 import { cn } from "~/lib/utils";
-
-const formSchema = z.object({
-	exif: z.boolean(),
-	collection: z.string(),
-	tags: z.string(),
-	images: z.array(
-		z.object({
-			value: z.custom<File>(),
-		}),
-		{ message: "Please upload at least one image." },
-	),
-});
+import { api } from "~/trpc/react";
 
 export default function ImportPage() {
-	const form = useForm<z.infer<typeof formSchema>>({
-		resolver: zodResolver(formSchema),
+	const mutation = api.photos.create.useMutation();
+
+	const form = useForm<z.infer<typeof importFormSchema>>({
+		resolver: zodResolver(importFormSchema),
 		defaultValues: {
 			exif: false,
 			collection: "",
@@ -76,8 +68,15 @@ export default function ImportPage() {
 		multiple: true,
 	});
 
-	function onSubmit(data: z.infer<typeof formSchema>) {
-		console.log(JSON.stringify(data, null, 2));
+	async function onSubmit(data: z.infer<typeof importFormSchema>) {
+		const fd = new FormData();
+
+		// fd.append("exif", data.exif);
+		for (const img of data.images) {
+			fd.append("images", img.value);
+		}
+
+		mutation.mutate(fd);
 	}
 
 	useEffect(() => {
@@ -95,41 +94,6 @@ export default function ImportPage() {
 
 	return (
 		<div className="py-4">
-			{/* <div
-				{...getRootProps()}
-				className="dashed cursor-pointer rounded-md border-2 p-16 text-center"
-			>
-				<input {...getInputProps()} />
-				{isDragActive ? (
-					<p>Drop the images here ...</p>
-				) : (
-					<p>Drag & drop here, or click to select files</p>
-				)}
-			</div>
-
-			<div className="grid grid-cols-2 gap-4 py-4 md:grid-cols-4 xl:grid-cols-8">
-				{files.map((file, index) => (
-					<div
-						// biome-ignore lint/suspicious/noArrayIndexKey: <explanation>
-						key={index}
-						className="flex flex-col items-center text-center"
-					>
-						<img src={file.preview} alt={file.name} className="rounded-md" />
-						<p className="my-1 text-sm">{file.name}</p>
-						<p className="mb-1 text-muted-foreground text-xs">
-							{(file.size / 1024).toFixed(1)} kB
-						</p>
-						<Button
-							variant="destructive"
-							onClick={() => removeFile(file)}
-							size="sm"
-						>
-							Delete
-						</Button>
-					</div>
-				))}
-			</div> */}
-
 			<Form {...form}>
 				<form
 					onSubmit={form.handleSubmit(onSubmit)}

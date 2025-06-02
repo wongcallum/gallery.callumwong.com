@@ -71,7 +71,9 @@ export default function ImportPage() {
 	async function onSubmit(data: z.infer<typeof importFormSchema>) {
 		const fd = new FormData();
 
-		// fd.append("exif", data.exif);
+		fd.append("exif", data.exif.toString());
+		fd.append("collection", data.collection);
+		fd.append("tags", data.tags);
 		for (const img of data.images) {
 			fd.append("images", img.value);
 		}

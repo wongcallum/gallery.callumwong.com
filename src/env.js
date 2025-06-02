@@ -14,6 +14,10 @@ export const env = createEnv({
 		AUTH_DISCORD_ID: z.string(),
 		AUTH_DISCORD_SECRET: z.string(),
 		DATABASE_URL: z.string().url(),
+		AWS_ACCESS_KEY_ID: z.string(),
+		AWS_SECRET_ACCESS_KEY: z.string(),
+		AWS_S3_BUCKET_NAME: z.string(),
+		AWS_S3_REGION: z.string(),
 		NODE_ENV: z
 			.enum(["development", "test", "production"])
 			.default("development"),
@@ -37,6 +41,10 @@ export const env = createEnv({
 		AUTH_DISCORD_ID: process.env.AUTH_DISCORD_ID,
 		AUTH_DISCORD_SECRET: process.env.AUTH_DISCORD_SECRET,
 		DATABASE_URL: process.env.DATABASE_URL,
+		AWS_ACCESS_KEY_ID: process.env.AWS_ACCESS_KEY_ID,
+		AWS_SECRET_ACCESS_KEY: process.env.AWS_SECRET_ACCESS_KEY,
+		AWS_S3_BUCKET_NAME: process.env.AWS_S3_BUCKET_NAME,
+		AWS_S3_REGION: process.env.AWS_S3_REGION,
 		NODE_ENV: process.env.NODE_ENV,
 	},
 	/**

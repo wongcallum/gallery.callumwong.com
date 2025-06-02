@@ -17,8 +17,9 @@ export default function LoginPage(props: {
 									key={provider.id}
 									action={async () => {
 										"use server";
+										const params = await props.searchParams;
 										await signIn(provider.id, {
-											redirectTo: props.searchParams?.callbackUrl ?? "",
+											redirectTo: (await params.callbackUrl) ?? "",
 										});
 									}}
 								>

@@ -29,6 +29,7 @@ export const collectionRouter = createTRPCRouter({
 	all: publicProcedure.query(async ({ ctx }) => {
 		const allCollections = await ctx.db
 			.select({
+				id: collections.id,
 				name: collections.name,
 				description: collections.description,
 				location: collections.location,

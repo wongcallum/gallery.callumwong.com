@@ -2,9 +2,9 @@
 
 import { zodResolver } from "@hookform/resolvers/zod";
 import { ImageUpIcon } from "lucide-react";
-import { useCallback, useEffect } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useDropzone } from "react-dropzone";
-import { useFieldArray, useForm } from "react-hook-form";
+import { useForm } from "react-hook-form";
 import type { z } from "zod";
 import { Combobox } from "~/components/combobox";
 import { Button } from "~/components/ui/button";
@@ -18,15 +18,15 @@ import {
 	FormMessage,
 } from "~/components/ui/form";
 import { Input } from "~/components/ui/input";
-import { importFormSchema } from "~/lib/schemas";
+import { importPhotoSchema } from "~/lib/schemas";
 import { cn } from "~/lib/utils";
 import { api } from "~/trpc/react";
 
 export default function ImportPage() {
 	const mutation = api.photos.create.useMutation();
 
-	const form = useForm<z.infer<typeof importFormSchema>>({
-		resolver: zodResolver(importFormSchema),
+	const form = useForm<z.infer<typeof importPhotoSchema>>({
+		resolver: zodResolver(importPhotoSchema),
 		defaultValues: {
 			exif: false,
 			collection: "",
@@ -34,21 +34,13 @@ export default function ImportPage() {
 		},
 	});
 
-	const {
-		fields: imageFields,
-		append: appendImage,
-		remove: removeImage,
-	} = useFieldArray({
-		name: "images",
-		control: form.control,
-	});
+	const [images, setImages] = useState<File[]>([]);
 
 	const onDrop = useCallback(
-		async (acceptedFiles: File[]) => {
-			appendImage(acceptedFiles.map((file) => ({ value: file })));
-			await form.trigger("images");
+		(acceptedFiles: File[]) => {
+			images.push(...acceptedFiles);
 		},
-		[appendImage, form],
+		[images],
 	);
 
 	const {
@@ -68,17 +60,17 @@ export default function ImportPage() {
 		multiple: true,
 	});
 
-	async function onSubmit(data: z.infer<typeof importFormSchema>) {
-		const fd = new FormData();
+	async function onSubmit(data: z.infer<typeof importPhotoSchema>) {
+		for (const img of images) {
+			const fd = new FormData();
 
-		fd.append("exif", data.exif.toString());
-		fd.append("collection", data.collection);
-		fd.append("tags", data.tags);
-		for (const img of data.images) {
-			fd.append("images", img.value);
+			fd.append("exif", data.exif.toString());
+			fd.append("collection", data.collection);
+			fd.append("tags", data.tags);
+			fd.append("image", img);
+
+			mutation.mutate(fd);
 		}
-
-		mutation.mutate(fd);
 	}
 
 	useEffect(() => {
@@ -125,6 +117,7 @@ export default function ImportPage() {
 									<ImageUpIcon className="h-12 w-12 fill-primary/75" />
 									<div className="mt-4 mb-2">
 										Drop or{" "}
+										{/* biome-ignore lint/a11y/useKeyWithClickEvents: <explanation> */}
 										<span
 											onClick={() => open()}
 											className="cursor-pointer text-primary hover:underline"
@@ -151,23 +144,26 @@ export default function ImportPage() {
 						)}
 					/>
 					<div className="mt-2 grid grid-cols-5 gap-2">
-						{imageFields.map((field, index) => (
+						{images.map((file, index) => (
 							<div
-								key={field.id}
+								// biome-ignore lint/suspicious/noArrayIndexKey: <explanation>
+								key={index}
 								className="flex flex-col items-center text-center"
 							>
 								<img
-									src={URL.createObjectURL(field.value)}
-									alt={field.value.name}
+									src={URL.createObjectURL(file)}
+									alt={file.name}
 									className="rounded-md"
 								/>
-								<p className="my-1 text-sm">{field.value.name}</p>
+								<p className="my-1 text-sm">{file.name}</p>
 								<p className="mb-1 text-muted-foreground text-xs">
-									{(field.value.size / 1024).toFixed(1)} kB
+									{(file.size / 1024).toFixed(1)} kB
 								</p>
 								<Button
 									variant="destructive"
-									onClick={() => removeImage(index)}
+									onClick={() => {
+										setImages(images.filter((img) => file !== img));
+									}}
 									size="sm"
 									className="w-full"
 								>

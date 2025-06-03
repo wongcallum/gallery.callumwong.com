@@ -22,6 +22,10 @@ import { importPhotoSchema } from "~/lib/schemas";
 import { cn } from "~/lib/utils";
 import { api } from "~/trpc/react";
 
+type FileWithPreview = File & {
+	preview: string;
+};
+
 export default function ImportPage() {
 	const mutation = api.photos.create.useMutation();
 
@@ -34,11 +38,17 @@ export default function ImportPage() {
 		},
 	});
 
-	const [images, setImages] = useState<File[]>([]);
+	const [images, setImages] = useState<FileWithPreview[]>([]);
 
 	const onDrop = useCallback(
 		(acceptedFiles: File[]) => {
-			images.push(...acceptedFiles);
+			for (const file of acceptedFiles) {
+				images.push(
+					Object.assign(file, {
+						preview: URL.createObjectURL(file),
+					}),
+				);
+			}
 		},
 		[images],
 	);
@@ -88,92 +98,74 @@ export default function ImportPage() {
 
 	return (
 		<div className="py-4">
+			<div
+				className={cn(
+					"relative flex flex-col items-center justify-center rounded-lg border border-dashed px-4 py-10",
+					{
+						"border-green-500 bg-green-500/10": isDragActive && !isDragReject,
+						"border-destructive bg-destructive/10":
+							isDragActive && isDragReject,
+						"border-border bg-card": !isDragActive,
+					},
+				)}
+				{...getRootProps()}
+			>
+				<input {...getInputProps()} id="images" />
+				<ImageUpIcon className="h-12 w-12 fill-primary/75" />
+				<div className="mt-4 mb-2">
+					Drop or{" "}
+					{/* biome-ignore lint/a11y/useKeyWithClickEvents: <explanation> */}
+					<span
+						onClick={() => open()}
+						className="cursor-pointer text-primary hover:underline"
+					>
+						select
+					</span>
+				</div>
+				<span
+					className={cn("-translate-x-1/2 absolute bottom-2 left-1/2 text-xs", {
+						"text-destructive": isDragReject || fileRejections.length > 0,
+						"text-muted-foreground":
+							!isDragReject && !(fileRejections.length > 0),
+					})}
+				>
+					Max size: 25MiB
+				</span>
+			</div>
+			<div className="mt-2 grid grid-cols-5 gap-2">
+				{images.map((file, index) => (
+					<div
+						// biome-ignore lint/suspicious/noArrayIndexKey: <explanation>
+						key={index}
+						className="flex flex-col items-center text-center"
+					>
+						<img src={file.preview} alt={file.name} className="rounded-md" />
+						<p className="my-1 text-sm">{file.name}</p>
+						<p className="mb-1 text-muted-foreground text-xs">
+							{(file.size / 1024).toFixed(1)} kB
+						</p>
+						<Button
+							variant="destructive"
+							onClick={() => {
+								URL.revokeObjectURL(file.preview);
+								setImages(images.filter((img) => file !== img));
+							}}
+							size="sm"
+							className="w-full"
+						>
+							Remove
+						</Button>
+					</div>
+				))}
+			</div>
+
+			{/* end dropzone */}
+
 			<Form {...form}>
 				<form
 					onSubmit={form.handleSubmit(onSubmit)}
 					className="mt-4 flex flex-col gap-2 text-nowrap"
 				>
-					{/* start dropzone */}
-					<FormField
-						control={form.control}
-						name="images"
-						render={() => (
-							<FormItem>
-								<FormLabel>Images</FormLabel>
-								<div
-									className={cn(
-										"relative flex flex-col items-center justify-center rounded-lg border border-dashed px-4 py-10",
-										{
-											"border-green-500 bg-green-500/10":
-												isDragActive && !isDragReject,
-											"border-destructive bg-destructive/10":
-												isDragActive && isDragReject,
-											"border-border bg-card": !isDragActive,
-										},
-									)}
-									{...getRootProps()}
-								>
-									<input {...getInputProps()} id="images" />
-									<ImageUpIcon className="h-12 w-12 fill-primary/75" />
-									<div className="mt-4 mb-2">
-										Drop or{" "}
-										{/* biome-ignore lint/a11y/useKeyWithClickEvents: <explanation> */}
-										<span
-											onClick={() => open()}
-											className="cursor-pointer text-primary hover:underline"
-										>
-											select
-										</span>
-									</div>
-									<span
-										className={cn(
-											"-translate-x-1/2 absolute bottom-2 left-1/2 text-xs",
-											{
-												"text-destructive":
-													isDragReject || fileRejections.length > 0,
-												"text-muted-foreground":
-													!isDragReject && !(fileRejections.length > 0),
-											},
-										)}
-									>
-										Max size: 25MiB
-									</span>
-								</div>
-								<FormMessage />
-							</FormItem>
-						)}
-					/>
-					<div className="mt-2 grid grid-cols-5 gap-2">
-						{images.map((file, index) => (
-							<div
-								// biome-ignore lint/suspicious/noArrayIndexKey: <explanation>
-								key={index}
-								className="flex flex-col items-center text-center"
-							>
-								<img
-									src={URL.createObjectURL(file)}
-									alt={file.name}
-									className="rounded-md"
-								/>
-								<p className="my-1 text-sm">{file.name}</p>
-								<p className="mb-1 text-muted-foreground text-xs">
-									{(file.size / 1024).toFixed(1)} kB
-								</p>
-								<Button
-									variant="destructive"
-									onClick={() => {
-										setImages(images.filter((img) => file !== img));
-									}}
-									size="sm"
-									className="w-full"
-								>
-									Remove
-								</Button>
-							</div>
-						))}
-					</div>
-					{/* end dropzone */}
-
 					<FormField
 						control={form.control}
 						name="exif"

@@ -6,6 +6,7 @@ import {
 import { z } from "zod";
 import { env } from "~/env";
 import s3Client from "~/lib/s3";
+import { importPhotoSchema } from "~/lib/schemas";
 
 import {
 	createTRPCRouter,
@@ -15,14 +16,19 @@ import {
 
 export const photoRouter = createTRPCRouter({
 	create: protectedProcedure
-		.input(z.instanceof(FormData))
+		.input(
+			z
+				.instanceof(FormData)
+				.transform((fd) => Object.fromEntries(fd.entries()))
+				.pipe(importPhotoSchema),
+		)
 		.mutation(async ({ ctx, input }) => {
-			const images = input.getAll("images") as File[];
+			const image = await input.image.arrayBuffer();
 
 			const command = new PutObjectCommand({
 				Bucket: env.AWS_S3_BUCKET_NAME,
 				Key: "test",
-				Body: (await images[0]?.arrayBuffer()) as Buffer,
+				Body: image as Buffer,
 			});
 
 			try {

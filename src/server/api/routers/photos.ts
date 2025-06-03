@@ -78,6 +78,12 @@ export const photoRouter = createTRPCRouter({
 				: null;
 
 			const id = crypto.randomUUID();
+			const newPhoto: typeof photos.$inferInsert = {
+				id,
+				uploadedById: ctx.session.user.id,
+				url: `https://${env.AWS_S3_BUCKET_NAME}.s3.${env.AWS_S3_REGION}.amazonaws.com/${id}`,
+				collectionId: collection?.id,
+			};
 
 			const exif = await exifr.parse(image, {
 				pick: [
@@ -92,22 +98,21 @@ export const photoRouter = createTRPCRouter({
 				],
 			});
 
-			const camera = await insertOrSelectCamera(exif.SerialNumber, exif.Model);
-			const lens = await insertOrSelectLens(exif.LensModel);
+			if (exif) {
+				const camera = await insertOrSelectCamera(
+					exif.SerialNumber,
+					exif.Model,
+				);
+				const lens = await insertOrSelectLens(exif.LensModel);
 
-			const newPhoto: typeof photos.$inferInsert = {
-				id,
-				uploadedById: ctx.session.user.id,
-				url: `https://${env.AWS_S3_BUCKET_NAME}.s3.${env.AWS_S3_REGION}.amazonaws.com/${id}`,
-				takenAt: exif.DateTimeOriginal || input.image.lastModified,
-				aperture: exif.FNumber,
-				shutterSpeed: exif.ExposureTime,
-				camera: camera?.id,
-				lens: lens?.id,
-				isoSpeed: exif.ISO,
-				focalLength: exif.FocalLength,
-				collectionId: collection?.id,
-			};
+				newPhoto.takenAt = exif.DateTimeOriginal || input.image.lastModified;
+				newPhoto.aperture = exif.FNumber;
+				newPhoto.shutterSpeed = exif.ExposureTime;
+				newPhoto.camera = camera?.id;
+				newPhoto.lens = lens?.id;
+				newPhoto.isoSpeed = exif.ISO;
+				newPhoto.focalLength = exif.FocalLength;
+			}
 
 			await db.insert(photos).values(newPhoto);
 

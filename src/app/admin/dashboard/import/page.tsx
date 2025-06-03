@@ -28,17 +28,22 @@ type FileWithPreview = File & {
 
 export default function ImportPage() {
 	const mutation = api.photos.create.useMutation();
+	const collections = api.collections.all.useQuery();
 
 	const form = useForm<z.infer<typeof importPhotoSchema>>({
 		resolver: zodResolver(importPhotoSchema),
 		defaultValues: {
-			exif: false,
+			exif: true,
 			collection: "",
 			tags: "",
 		},
 	});
 
 	const [images, setImages] = useState<FileWithPreview[]>([]);
+	const removeImage = (file: FileWithPreview) => {
+		setImages((prevImages) => prevImages.filter((img) => img !== file));
+		URL.revokeObjectURL(file.preview);
+	};
 
 	const onDrop = useCallback(
 		(acceptedFiles: File[]) => {
@@ -59,7 +64,6 @@ export default function ImportPage() {
 		isDragActive,
 		isDragReject,
 		fileRejections,
-		open,
 	} = useDropzone({
 		onDrop,
 		maxFiles: 10,
@@ -71,15 +75,19 @@ export default function ImportPage() {
 	});
 
 	async function onSubmit(data: z.infer<typeof importPhotoSchema>) {
-		for (const img of images) {
+		for (const image of images) {
 			const fd = new FormData();
 
 			if (data.collection) fd.append("collection", data.collection);
 			if (data.tags) fd.append("tags", data.tags);
 			fd.append("exif", data.exif.toString());
-			fd.append("image", img);
+			fd.append("image", image);
 
-			mutation.mutate(fd);
+			await mutation.mutateAsync(fd, {
+				onSuccess(data, variables, context) {
+					removeImage(image);
+				},
+			});
 		}
 	}
 
@@ -112,16 +120,7 @@ export default function ImportPage() {
 			>
 				<input {...getInputProps()} id="images" />
 				<ImageUpIcon className="h-12 w-12 fill-primary/75" />
-				<div className="mt-4 mb-2">
-					Drop or{" "}
-					{/* biome-ignore lint/a11y/useKeyWithClickEvents: <explanation> */}
-					<span
-						onClick={() => open()}
-						className="cursor-pointer text-primary hover:underline"
-					>
-						select
-					</span>
-				</div>
+				<div className="mt-4 mb-2">Drag & drop here or click to select</div>
 				<span
 					className={cn("-translate-x-1/2 absolute bottom-2 left-1/2 text-xs", {
 						"text-destructive": isDragReject || fileRejections.length > 0,
@@ -132,7 +131,7 @@ export default function ImportPage() {
 					Max size: 25MiB
 				</span>
 			</div>
-			<div className="mt-2 grid grid-cols-5 gap-2">
+			<div className="mt-2 grid grid-cols-2 gap-4 py-4 md:grid-cols-4 xl:grid-cols-6">
 				{images.map((file, index) => (
 					<div
 						// biome-ignore lint/suspicious/noArrayIndexKey: <explanation>
@@ -146,12 +145,9 @@ export default function ImportPage() {
 						</p>
 						<Button
 							variant="destructive"
-							onClick={() => {
-								URL.revokeObjectURL(file.preview);
-								setImages(images.filter((img) => file !== img));
-							}}
+							onClick={() => removeImage(file)}
 							size="sm"
-							className="w-full"
+							disabled={mutation.isPending}
 						>
 							Remove
 						</Button>
@@ -190,12 +186,12 @@ export default function ImportPage() {
 								<FormLabel>Add to collection:</FormLabel>
 								<Combobox
 									id="collection"
-									options={[
-										{
-											value: "1",
-											label: "My Portfolio",
-										},
-									]}
+									options={
+										collections.data?.map((collection) => ({
+											value: collection.id.toString(),
+											label: collection.name,
+										})) || []
+									}
 									placeholder="None"
 									value={field.value}
 									setValue={(value) => form.setValue("collection", value)}
@@ -220,7 +216,9 @@ export default function ImportPage() {
 							</FormItem>
 						)}
 					/>
-					<Button type="submit">Import</Button>
+					<Button type="submit" disabled={images.length === 0}>
+						Import
+					</Button>
 				</form>
 			</Form>
 		</div>

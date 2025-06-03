@@ -1,18 +1,60 @@
-import {
-	PutObjectCommand,
-	S3ServiceException,
-	paginateListBuckets,
-} from "@aws-sdk/client-s3";
+import { paginateListBuckets } from "@aws-sdk/client-s3";
+import exifr from "exifr";
 import { z } from "zod";
 import { env } from "~/env";
 import s3Client from "~/lib/s3";
 import { importPhotoSchema } from "~/lib/schemas";
-
 import {
 	createTRPCRouter,
 	protectedProcedure,
 	publicProcedure,
 } from "~/server/api/trpc";
+import { db } from "~/server/db";
+import { cameras, lenses, photos } from "~/server/db/schema";
+
+async function insertOrSelectLens(
+	model: string,
+): Promise<typeof lenses.$inferInsert | undefined> {
+	if (!model) return;
+	const insertedLens = await db
+		.insert(lenses)
+		.values({
+			name: model,
+		})
+		.onConflictDoNothing()
+		.returning();
+
+	if (insertedLens.length > 0) {
+		return insertedLens[0];
+	}
+
+	return await db.query.lenses.findFirst({
+		where: (lenses, { eq }) => eq(lenses.name, model),
+	});
+}
+
+async function insertOrSelectCamera(
+	serial: number,
+	model: string,
+): Promise<typeof cameras.$inferInsert | undefined> {
+	if (!serial) return;
+	const insertedCamera = await db
+		.insert(cameras)
+		.values({
+			serial,
+			name: model,
+		})
+		.onConflictDoNothing()
+		.returning();
+
+	if (insertedCamera.length > 0) {
+		return insertedCamera[0];
+	}
+
+	return await db.query.cameras.findFirst({
+		where: (cameras, { eq }) => eq(cameras.serial, serial),
+	});
+}
 
 export const photoRouter = createTRPCRouter({
 	create: protectedProcedure
@@ -25,33 +67,78 @@ export const photoRouter = createTRPCRouter({
 		.mutation(async ({ ctx, input }) => {
 			const image = await input.image.arrayBuffer();
 
-			const command = new PutObjectCommand({
-				Bucket: env.AWS_S3_BUCKET_NAME,
-				Key: "test",
-				Body: image as Buffer,
+			const collectionId = input.collection
+				? Number.parseInt(input.collection)
+				: null;
+
+			const collection = collectionId
+				? await db.query.collections.findFirst({
+						where: (collections, { eq }) => eq(collections.id, collectionId),
+					})
+				: null;
+
+			const id = crypto.randomUUID();
+
+			const exif = await exifr.parse(image, {
+				pick: [
+					"DateTimeOriginal",
+					"FNumber",
+					"ExposureTime",
+					"SerialNumber",
+					"Model",
+					"LensModel",
+					"ISO",
+					"FocalLength",
+				],
 			});
 
-			try {
-				const response = await s3Client.send(command);
-				console.log(response);
-			} catch (caught) {
-				if (
-					caught instanceof S3ServiceException &&
-					caught.name === "EntityTooLarge"
-				) {
-					console.error(
-						`Error from S3 while uploading object. \
-			The object was too large. To upload objects larger than 5GB, use the S3 console (160GB max) \
-			or the multipart upload API (5TB max).`,
-					);
-				} else if (caught instanceof S3ServiceException) {
-					console.error(
-						`Error from S3 while uploading object.  ${caught.name}: ${caught.message}`,
-					);
-				} else {
-					throw caught;
-				}
-			}
+			const camera = await insertOrSelectCamera(exif.SerialNumber, exif.Model);
+			const lens = await insertOrSelectLens(exif.LensModel);
+
+			const newPhoto: typeof photos.$inferInsert = {
+				id,
+				uploadedById: ctx.session.user.id,
+				url: `https://${env.AWS_S3_BUCKET_NAME}.s3.${env.AWS_S3_REGION}.amazonaws.com/${id}`,
+				takenAt: exif.DateTimeOriginal || input.image.lastModified,
+				aperture: exif.FNumber,
+				shutterSpeed: exif.ExposureTime,
+				camera: camera?.id,
+				lens: lens?.id,
+				isoSpeed: exif.ISO,
+				focalLength: exif.FocalLength,
+				collectionId: collection?.id,
+			};
+
+			await db.insert(photos).values(newPhoto);
+
+			// const command = new PutObjectCommand({
+			// 	Bucket: env.AWS_S3_BUCKET_NAME,
+			// 	Key: id,
+			// 	Body: image as Buffer,
+			// });
+			//
+			// try {
+			// 	const response = await s3Client.send(command);
+			// } catch (caught) {
+			// 	if (
+			// 		caught instanceof S3ServiceException &&
+			// 		caught.name === "EntityTooLarge"
+			// 	) {
+			// 		throw new TRPCError({
+			// 			code: "PAYLOAD_TOO_LARGE",
+			// 			message: "Uploaded file is too large!",
+			// 		});
+			// 	}
+
+			// 	if (caught instanceof Error) {
+			// 		throw new TRPCError({
+			// 			code: "INTERNAL_SERVER_ERROR",
+			// 			message: caught.message,
+			// 		});
+			// 	}
+
+			// 	throw caught;
+			// }
 		}),
 	list: publicProcedure.query(async ({ ctx }) => {
 		// const command = new ListObjectsCommand({

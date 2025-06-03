@@ -45,16 +45,13 @@ export const photos = createTable(
 			.text({ length: 255 })
 			.notNull()
 			.references(() => users.id),
-		takenAt: d
-			.integer({ mode: "timestamp" })
-			// .default(sql`(unixepoch())`)
-			.notNull(),
+		takenAt: d.integer({ mode: "timestamp" }),
 		aperture: d.real(),
 		shutterSpeed: d.real(),
-		focalLength: d.integer(),
+		focalLength: d.real(),
 		isoSpeed: d.integer(),
-		cameraSerial: d.integer().references(() => cameras.id),
-		lensSerial: d.integer().references(() => lenses.id),
+		camera: d.integer().references(() => cameras.id),
+		lens: d.integer().references(() => lenses.id),
 		title: d.text({ length: 256 }),
 		url: d.text({ length: 2048 }).notNull(),
 	}),
@@ -71,25 +68,25 @@ export const photosRelations = relations(photos, ({ one, many }) => ({
 	}),
 	photosToTags: many(photosToTags),
 	camera: one(cameras, {
-		fields: [photos.cameraSerial],
-		references: [cameras.serial],
+		fields: [photos.camera],
+		references: [cameras.id],
 	}),
 	lens: one(lenses, {
-		fields: [photos.lensSerial],
-		references: [lenses.serial],
+		fields: [photos.lens],
+		references: [lenses.id],
 	}),
 }));
 
 export const cameras = createTable("camera", (d) => ({
 	id: d.integer().primaryKey({ autoIncrement: true }),
-	serial: d.integer().unique(),
+	serial: d.integer().unique().notNull(),
 	name: d.text().notNull(),
 }));
 
 export const lenses = createTable("lens", (d) => ({
 	id: d.integer().primaryKey({ autoIncrement: true }),
-	serial: d.integer().unique(),
-	name: d.text().notNull(),
+	// serial: d.integer().unique().notNull(),
+	name: d.text().notNull().unique(),
 }));
 
 export const tags = createTable("tag", (d) => ({

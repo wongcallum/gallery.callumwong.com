@@ -74,9 +74,9 @@ export default function ImportPage() {
 		for (const img of images) {
 			const fd = new FormData();
 
+			if (data.collection) fd.append("collection", data.collection);
+			if (data.tags) fd.append("tags", data.tags);
 			fd.append("exif", data.exif.toString());
-			fd.append("collection", data.collection);
-			fd.append("tags", data.tags);
 			fd.append("image", img);
 
 			mutation.mutate(fd);

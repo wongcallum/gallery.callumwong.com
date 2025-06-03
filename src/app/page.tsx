@@ -11,12 +11,11 @@ import { api } from "~/trpc/react";
 export default function Home() {
 	const cameras = api.filter.cameras.useQuery();
 	const lenses = api.filter.lens.useQuery();
+	const collections = api.collections.all.useQuery();
 
 	const [camera, setCamera] = React.useState<string>();
 	const [lens, setLens] = React.useState<string>();
 	const [date, setDate] = React.useState<DateRange | undefined>();
-
-	if (!cameras.data || !lenses.data) return <div>Loading...</div>;
 
 	return (
 		<Tabs defaultValue="collection" className="flex min-h-screen flex-row">
@@ -31,17 +30,21 @@ export default function Home() {
 					value={camera}
 					setValue={setCamera}
 					placeholder="All cameras"
-					options={cameras.data.map((camera) => {
-						return { value: camera.serial, label: camera.model };
-					})}
+					options={
+						cameras.data?.map((camera) => {
+							return { value: camera.id.toString(), label: camera.name };
+						}) || []
+					}
 				/>
 				<Combobox
 					value={lens}
 					setValue={setLens}
 					placeholder="All lenses"
-					options={lenses.data.map((lens) => {
-						return { value: lens.serial, label: lens.model };
-					})}
+					options={
+						lenses.data?.map((lens) => {
+							return { value: lens.id.toString(), label: lens.name };
+						}) || []
+					}
 				/>
 				<DatePickerWithRange date={date} setDate={setDate} />
 			</div>
@@ -49,28 +52,30 @@ export default function Home() {
 				<TabsContent value="collection">
 					<Input />
 					<div className="columns-2 gap-4 py-4 sm:columns-3 sm:gap-8">
-						<div className="relative aspect-3/2">
-							{/* biome-ignore lint/a11y/useAltText: <explanation> */}
-							<img
-								className="h-full w-full rounded-md object-cover"
-								src="/IMG_0664.jpg"
-							/>
-							<div className="absolute right-0 bottom-0 left-0 flex items-center justify-between rounded-b-md bg-black/60 p-2 text-white">
-								<span className="font-semibold">My Portfolio</span>
-								<span>50 images</span>
-							</div>
-						</div>
-						<div className="relative aspect-3/2">
-							{/* biome-ignore lint/a11y/useAltText: <explanation> */}
-							<img
-								className="h-full w-full rounded-md object-cover"
-								src="/IMG_0592.jpg"
-							/>
-							<div className="absolute right-0 bottom-0 left-0 flex items-center justify-between rounded-b-md bg-black/60 p-2 text-white">
-								<span className="font-semibold">Fat</span>
-								<span>999 images</span>
-							</div>
-						</div>
+						{collections.data?.map((collection) => {
+							let thumbnail = collection.thumbnailPhotoURL;
+							if (!thumbnail) {
+								const query = api.photos.getLatestInCollection.useQuery({
+									collectionId: collection.id,
+								});
+
+								thumbnail = query.data || "/public/frown.svg";
+							}
+
+							return (
+								<div className="relative aspect-3/2" key={collection.id}>
+									{/* biome-ignore lint/a11y/useAltText: <explanation> */}
+									<img
+										className="h-full w-full rounded-md object-cover"
+										src={thumbnail}
+									/>
+									<div className="absolute right-0 bottom-0 left-0 flex items-center justify-between rounded-b-md bg-black/60 p-2 text-white">
+										<span className="font-semibold">{collection.name}</span>
+										<span>{collection.photoCount}</span>
+									</div>
+								</div>
+							);
+						})}
 					</div>
 				</TabsContent>
 				<TabsContent value="tag">

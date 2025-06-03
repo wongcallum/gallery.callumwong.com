@@ -1,8 +1,7 @@
-import { paginateListBuckets } from "@aws-sdk/client-s3";
+import { desc, eq } from "drizzle-orm";
 import exifr from "exifr";
 import { z } from "zod";
 import { env } from "~/env";
-import s3Client from "~/lib/s3";
 import { importPhotoSchema } from "~/lib/schemas";
 import {
 	createTRPCRouter,
@@ -81,8 +80,9 @@ export const photoRouter = createTRPCRouter({
 			const newPhoto: typeof photos.$inferInsert = {
 				id,
 				uploadedById: ctx.session.user.id,
-				url: `https://${env.AWS_S3_BUCKET_NAME}.s3.${env.AWS_S3_REGION}.amazonaws.com/${id}`,
 				collectionId: collection?.id,
+				takenAt: new Date(input.image.lastModified),
+				url: `https://${env.AWS_S3_BUCKET_NAME}.s3.${env.AWS_S3_REGION}.amazonaws.com/${id}`,
 			};
 
 			const exif = await exifr.parse(image, {
@@ -105,7 +105,7 @@ export const photoRouter = createTRPCRouter({
 				);
 				const lens = await insertOrSelectLens(exif.LensModel);
 
-				newPhoto.takenAt = exif.DateTimeOriginal || input.image.lastModified;
+				if (exif.DateTimeOriginal) newPhoto.takenAt = exif.DateTimeOriginal;
 				newPhoto.aperture = exif.FNumber;
 				newPhoto.shutterSpeed = exif.ExposureTime;
 				newPhoto.camera = camera?.id;
@@ -145,24 +145,20 @@ export const photoRouter = createTRPCRouter({
 			// 	throw caught;
 			// }
 		}),
-	list: publicProcedure.query(async ({ ctx }) => {
-		// const command = new ListObjectsCommand({
-		// 	Bucket: env.AWS_S3_BUCKET_NAME,
-		// });
-		// const { Contents } = await s3Client.send(command);
+	getLatestInCollection: publicProcedure
+		.input(
+			z.object({
+				collectionId: z.number(),
+			}),
+		)
+		.query(async ({ input }) => {
+			const latestPhoto = await db
+				.select({ url: photos.url })
+				.from(photos)
+				.where(eq(photos.collectionId, input.collectionId))
+				.orderBy(desc(photos.takenAt))
+				.limit(1);
 
-		const buckets = [];
-
-		for await (const page of paginateListBuckets({ client: s3Client }, {})) {
-			if (page.Buckets) {
-				buckets.push(...page.Buckets);
-			}
-		}
-		console.log("Buckets: ");
-		console.log(buckets.map((bucket) => bucket.Name).join("\n"));
-
-		// const contentsList = Contents?.map((c) => ` • ${c.Key}`).join("\n");
-		// console.log("\nHere's a list of files in the bucket:");
-		// console.log(`${contentsList}\n`);
-	}),
+			return latestPhoto[0]?.url;
+		}),
 });

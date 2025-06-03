@@ -34,6 +34,7 @@ export const collectionRouter = createTRPCRouter({
 				description: collections.description,
 				location: collections.location,
 				photoCount: count(photos.id),
+				thumbnailPhotoURL: collections.thumbnailPhotoURL,
 			})
 			.from(collections)
 			.leftJoin(photos, eq(collections.id, photos.collectionId))

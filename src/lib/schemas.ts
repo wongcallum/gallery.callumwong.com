@@ -12,3 +12,7 @@ export const createCollectionSchema = z.object({
 	description: z.string().optional(),
 	location: z.string().optional(),
 });
+
+export const createTagSchema = z.object({
+	name: z.string().min(1),
+});

@@ -90,7 +90,8 @@ export const lenses = createTable("lens", (d) => ({
 }));
 
 export const tags = createTable("tag", (d) => ({
-	id: d.text({ length: 256 }).unique().primaryKey(),
+	id: d.integer().primaryKey({ autoIncrement: true }),
+	name: d.text({ length: 256 }).unique().notNull(),
 }));
 
 export const tagsRelations = relations(tags, ({ many }) => ({

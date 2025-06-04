@@ -13,19 +13,19 @@ import {
 } from "~/components/ui/dropdown-menu";
 
 export type Tag = {
-	tag: string;
-	images: number;
+	name: string;
+	photoCount: number;
 };
 
 export const columns: TagColumnDef<Tag>[] = [
 	{
-		accessorKey: "tag",
+		accessorKey: "name",
 		header: ({ column }) => (
 			<DataTableColumnHeader column={column} title="Name" className="ml-2" />
 		),
 	},
 	{
-		accessorKey: "images",
+		accessorKey: "photoCount",
 		header: ({ column }) => (
 			<DataTableColumnHeader column={column} title="Images" />
 		),

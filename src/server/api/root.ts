@@ -2,6 +2,7 @@ import { collectionRouter } from "~/server/api/routers/collections";
 import { photoRouter } from "~/server/api/routers/photos";
 import { createCallerFactory, createTRPCRouter } from "~/server/api/trpc";
 import { filterRouter } from "./routers/filter";
+import { tagsRouter as tagRouter } from "./routers/tags";
 
 /**
  * This is the primary router for your server.
@@ -12,6 +13,7 @@ export const appRouter = createTRPCRouter({
 	filter: filterRouter,
 	collections: collectionRouter,
 	photos: photoRouter,
+	tags: tagRouter,
 });
 
 // export type definition of API

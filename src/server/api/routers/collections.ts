@@ -1,4 +1,4 @@
-import { count, eq } from "drizzle-orm";
+import { count, desc, eq } from "drizzle-orm";
 import { createCollectionSchema } from "~/lib/schemas";
 
 import {
@@ -6,6 +6,7 @@ import {
 	protectedProcedure,
 	publicProcedure,
 } from "~/server/api/trpc";
+import { db } from "~/server/db";
 import { collections, photos } from "~/server/db/schema";
 
 export const collectionRouter = createTRPCRouter({
@@ -34,6 +35,19 @@ export const collectionRouter = createTRPCRouter({
 			.leftJoin(photos, eq(collections.id, photos.collectionId))
 			.groupBy(collections.id)
 			.orderBy(collections.name);
+
+		for (const collection of allCollections) {
+			if (!collection.thumbnailPhotoURL) {
+				const latestPhoto = await db
+					.select({ url: photos.url })
+					.from(photos)
+					.where(eq(photos.collectionId, collection.id))
+					.orderBy(desc(photos.takenAt))
+					.limit(1);
+
+				collection.thumbnailPhotoURL = latestPhoto[0]?.url || null;
+			}
+		}
 
 		return allCollections;
 	}),

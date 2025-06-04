@@ -1,5 +1,5 @@
 import { count, eq } from "drizzle-orm";
-import { z } from "zod";
+import { createCollectionSchema } from "~/lib/schemas";
 
 import {
 	createTRPCRouter,
@@ -10,13 +10,7 @@ import { collections, photos } from "~/server/db/schema";
 
 export const collectionRouter = createTRPCRouter({
 	create: protectedProcedure
-		.input(
-			z.object({
-				name: z.string().min(1),
-				description: z.string().min(1),
-				location: z.string().optional(),
-			}),
-		)
+		.input(createCollectionSchema)
 		.mutation(async ({ ctx, input }) => {
 			await ctx.db.insert(collections).values({
 				name: input.name,

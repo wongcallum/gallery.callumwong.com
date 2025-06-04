@@ -1,3 +1,9 @@
+"use client";
+
+import { zodResolver } from "@hookform/resolvers/zod";
+import { useState } from "react";
+import { useForm } from "react-hook-form";
+import type { z } from "zod";
 import { DataTable } from "~/components/data-table";
 import { Button } from "~/components/ui/button";
 import {
@@ -8,22 +14,52 @@ import {
 	DialogTitle,
 	DialogTrigger,
 } from "~/components/ui/dialog";
+import {
+	Form,
+	FormControl,
+	FormField,
+	FormItem,
+	FormLabel,
+	FormMessage,
+} from "~/components/ui/form";
 import { Input } from "~/components/ui/input";
-import { Label } from "~/components/ui/label";
-import { api } from "~/trpc/server";
+import { createCollectionSchema } from "~/lib/schemas";
+import { api } from "~/trpc/react";
 import { columns } from "./columns";
 
-export default async function CollectionsPage() {
-	const collections = await api.collections.all();
+export default function CollectionsPage() {
+	const collections = api.collections.all.useQuery();
+	const mutation = api.collections.create.useMutation();
+
+	const [open, setOpen] = useState(false);
+
+	const form = useForm<z.infer<typeof createCollectionSchema>>({
+		resolver: zodResolver(createCollectionSchema),
+		defaultValues: {
+			name: "",
+			description: "",
+			location: "",
+		},
+	});
+
+	async function onSubmit(values: z.infer<typeof createCollectionSchema>) {
+		mutation.mutateAsync(values, {
+			async onSuccess() {
+				form.reset();
+				setOpen(false);
+				collections.refetch();
+			},
+		});
+	}
 
 	return (
 		<DataTable
 			filterPlaceholder="Filter collections..."
 			filterColumn="name"
 			columns={columns}
-			data={collections}
+			data={collections.data || []}
 		>
-			<Dialog>
+			<Dialog open={open} onOpenChange={setOpen}>
 				<DialogTrigger asChild>
 					<Button>New collection</Button>
 				</DialogTrigger>
@@ -31,29 +67,54 @@ export default async function CollectionsPage() {
 					<DialogHeader>
 						<DialogTitle>Add collection</DialogTitle>
 					</DialogHeader>
-					<div className="grid gap-4 py-4">
-						<div className="grid grid-cols-4 items-center gap-4">
-							<Label htmlFor="name" className="text-right">
-								Name
-							</Label>
-							<Input id="name" value="name" className="col-span-3" />
-						</div>
-						<div className="grid grid-cols-4 items-center gap-4">
-							<Label htmlFor="description" className="text-right">
-								Description
-							</Label>
-							<Input id="description" value="desc" className="col-span-3" />
-						</div>
-						<div className="grid grid-cols-4 items-center gap-4">
-							<Label htmlFor="location" className="text-right">
-								Location
-							</Label>
-							<Input id="location" value="loc" className="col-span-3" />
-						</div>
-					</div>
-					<DialogFooter>
-						<Button type="submit">Save changes</Button>
-					</DialogFooter>
+					<Form {...form}>
+						<form onSubmit={form.handleSubmit(onSubmit)} className="space-y-2">
+							<FormField
+								control={form.control}
+								name="name"
+								render={({ field }) => (
+									<FormItem className="grid grid-cols-4 items-center gap-4">
+										<FormLabel>Name</FormLabel>
+										<FormControl>
+											<Input className="col-span-3" {...field} />
+										</FormControl>
+										<FormMessage />
+									</FormItem>
+								)}
+							/>
+							<FormField
+								control={form.control}
+								name="description"
+								render={({ field }) => (
+									<FormItem className="grid grid-cols-4 items-center gap-4">
+										<FormLabel>Description</FormLabel>
+										<FormControl>
+											<Input className="col-span-3" {...field} />
+										</FormControl>
+										<FormMessage />
+									</FormItem>
+								)}
+							/>
+							<FormField
+								control={form.control}
+								name="location"
+								render={({ field }) => (
+									<FormItem className="grid grid-cols-4 items-center gap-4">
+										<FormLabel>Location</FormLabel>
+										<FormControl>
+											<Input className="col-span-3" {...field} />
+										</FormControl>
+										<FormMessage />
+									</FormItem>
+								)}
+							/>
+							<DialogFooter>
+								<Button type="submit" disabled={mutation.isPending}>
+									Save changes
+								</Button>
+							</DialogFooter>
+						</form>
+					</Form>
 				</DialogContent>
 			</Dialog>
 		</DataTable>

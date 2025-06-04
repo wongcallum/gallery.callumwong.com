@@ -6,3 +6,9 @@ export const importPhotoSchema = z.object({
 	tags: z.string().optional(),
 	image: z.custom<File>(),
 });
+
+export const createCollectionSchema = z.object({
+	name: z.string().min(1),
+	description: z.string().optional(),
+	location: z.string().optional(),
+});

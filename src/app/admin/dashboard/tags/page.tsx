@@ -28,7 +28,7 @@ import { api } from "~/trpc/react";
 import { columns } from "./columns";
 
 export default function TagsPage() {
-	const tags = api.tags.all.useQuery();
+	const tags = api.tags.withCount.useQuery();
 	const mutation = api.tags.create.useMutation();
 
 	const [open, setOpen] = useState(false);

@@ -106,7 +106,7 @@ export const photosToTags = createTable(
 			.notNull()
 			.references(() => photos.id),
 		tagId: d
-			.text({ length: 256 })
+			.integer()
 			.notNull()
 			.references(() => tags.id),
 	}),

@@ -5,8 +5,10 @@ import { ImageUpIcon } from "lucide-react";
 import { useCallback, useEffect, useState } from "react";
 import { useDropzone } from "react-dropzone";
 import { useForm } from "react-hook-form";
+import { useDebouncedCallback } from "use-debounce";
 import type { z } from "zod";
 import { Combobox } from "~/components/combobox";
+import { MultiAsyncSelect } from "~/components/multi-async-select";
 import { Button } from "~/components/ui/button";
 import { Checkbox } from "~/components/ui/checkbox";
 import {
@@ -17,7 +19,6 @@ import {
 	FormLabel,
 	FormMessage,
 } from "~/components/ui/form";
-import { Input } from "~/components/ui/input";
 import { importPhotoSchema } from "~/lib/schemas";
 import { cn } from "~/lib/utils";
 import { api } from "~/trpc/react";
@@ -30,12 +31,22 @@ export default function ImportPage() {
 	const mutation = api.photos.create.useMutation();
 	const collections = api.collections.all.useQuery();
 
+	const tagSearch = api.tags.search.useMutation();
+	useEffect(tagSearch.mutate, []);
+	const handleSearch = useDebouncedCallback((value: string) => {
+		// if (!value) {
+		// 	tagSearch.reset();
+		// } else {
+		tagSearch.mutate({ searchString: value });
+		// }
+	}, 500);
+
 	const form = useForm<z.infer<typeof importPhotoSchema>>({
 		resolver: zodResolver(importPhotoSchema),
 		defaultValues: {
 			exif: true,
 			collection: "",
-			tags: "",
+			tags: [],
 		},
 	});
 
@@ -78,14 +89,15 @@ export default function ImportPage() {
 		for (const image of images) {
 			const fd = new FormData();
 
-			if (data.collection) fd.append("collection", data.collection);
-			if (data.tags) fd.append("tags", data.tags);
+			fd.append("collection", data.collection);
+			fd.append("tags", JSON.stringify(data.tags));
 			fd.append("exif", data.exif.toString());
 			fd.append("image", image);
 
 			await mutation.mutateAsync(fd, {
-				onSuccess(data, variables, context) {
+				onSuccess() {
 					removeImage(image);
+					form.reset();
 				},
 			});
 		}
@@ -207,9 +219,19 @@ export default function ImportPage() {
 							<FormItem className="flex items-center">
 								<FormLabel>Apply tags:</FormLabel>
 								<FormControl>
-									<Input
-										placeholder="Add tags separated by spaces"
-										{...field}
+									<MultiAsyncSelect
+										loading={tagSearch.isPending}
+										// error={searchMutation.error}
+										options={
+											tagSearch.data?.map((tag) => ({
+												value: tag.id.toString(),
+												label: tag.name,
+											})) || []
+										}
+										onValueChange={field.onChange}
+										className="w-fit"
+										onSearch={handleSearch}
+										async
 									/>
 								</FormControl>
 								<FormMessage />

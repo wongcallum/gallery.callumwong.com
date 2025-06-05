@@ -2,8 +2,8 @@ import { z } from "zod";
 
 export const importPhotoSchema = z.object({
 	exif: z.coerce.boolean(),
-	collection: z.string().optional(),
-	tags: z.string().optional(),
+	collection: z.string(),
+	tags: z.array(z.string()),
 	image: z.custom<File>(),
 });
 

@@ -1,4 +1,5 @@
-import { count, eq } from "drizzle-orm";
+import { count, eq, like } from "drizzle-orm";
+import { z } from "zod";
 import { createTagSchema } from "~/lib/schemas";
 
 import {
@@ -17,7 +18,7 @@ export const tagsRouter = createTRPCRouter({
 			});
 		}),
 
-	all: publicProcedure.query(async ({ ctx, input }) => {
+	withCount: publicProcedure.query(async ({ ctx }) => {
 		const allTags = await ctx.db
 			.select({
 				id: tags.id,
@@ -30,4 +31,22 @@ export const tagsRouter = createTRPCRouter({
 
 		return allTags;
 	}),
+
+	search: publicProcedure
+		.input(
+			z
+				.object({
+					searchString: z.string(),
+				})
+				.optional(),
+		)
+		.mutation(async ({ ctx, input }) => {
+			if (!input?.searchString) {
+				return await ctx.db.query.tags.findMany();
+			}
+
+			return await ctx.db.query.tags.findMany({
+				where: like(tags.name, `%${input.searchString}%`),
+			});
+		}),
 });

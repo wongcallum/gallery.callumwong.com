@@ -9,7 +9,7 @@ import {
 	publicProcedure,
 } from "~/server/api/trpc";
 import { db } from "~/server/db";
-import { cameras, lenses, photos } from "~/server/db/schema";
+import { cameras, lenses, photos, photosToTags } from "~/server/db/schema";
 
 async function insertOrSelectLens(
 	model: string,
@@ -61,6 +61,10 @@ export const photoRouter = createTRPCRouter({
 			z
 				.instanceof(FormData)
 				.transform((fd) => Object.fromEntries(fd.entries()))
+				.transform((obj) => ({
+					...obj,
+					tags: obj.tags ? JSON.parse(obj.tags.toString()) : [],
+				}))
 				.pipe(importPhotoSchema),
 		)
 		.mutation(async ({ ctx, input }) => {
@@ -108,13 +112,22 @@ export const photoRouter = createTRPCRouter({
 				if (exif.DateTimeOriginal) newPhoto.takenAt = exif.DateTimeOriginal;
 				newPhoto.aperture = exif.FNumber;
 				newPhoto.shutterSpeed = exif.ExposureTime;
-				newPhoto.camera = camera?.id;
-				newPhoto.lens = lens?.id;
+				newPhoto.cameraId = camera?.id;
+				newPhoto.lensId = lens?.id;
 				newPhoto.isoSpeed = exif.ISO;
 				newPhoto.focalLength = exif.FocalLength;
 			}
 
-			await db.insert(photos).values(newPhoto);
+			await db.transaction(async (tx) => {
+				await tx.insert(photos).values(newPhoto);
+
+				for (const tag of input.tags) {
+					await tx.insert(photosToTags).values({
+						photoId: id,
+						tagId: Number.parseInt(tag),
+					});
+				}
+			});
 
 			// const command = new PutObjectCommand({
 			// 	Bucket: env.AWS_S3_BUCKET_NAME,

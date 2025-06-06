@@ -1,7 +1,10 @@
+import { PutObjectCommand, S3ServiceException } from "@aws-sdk/client-s3";
+import { TRPCError } from "@trpc/server";
 import { desc, eq } from "drizzle-orm";
 import exifr from "exifr";
 import { z } from "zod";
 import { env } from "~/env";
+import s3Client from "~/lib/s3";
 import { importPhotoSchema } from "~/lib/schemas";
 import {
 	createTRPCRouter,
@@ -86,7 +89,7 @@ export const photoRouter = createTRPCRouter({
 				uploadedById: ctx.session.user.id,
 				collectionId: collection?.id,
 				takenAt: new Date(input.image.lastModified),
-				url: `https://${env.AWS_S3_BUCKET_NAME}.s3.${env.AWS_S3_REGION}.amazonaws.com/${id}`,
+				url: `https://s3.${env.AWS_S3_REGION}.amazonaws.com/${env.AWS_S3_BUCKET_NAME}/${id}`,
 			};
 
 			const exif = await exifr.parse(image, {
@@ -129,34 +132,41 @@ export const photoRouter = createTRPCRouter({
 				}
 			});
 
-			// const command = new PutObjectCommand({
-			// 	Bucket: env.AWS_S3_BUCKET_NAME,
-			// 	Key: id,
-			// 	Body: image as Buffer,
-			// });
-			//
-			// try {
-			// 	const response = await s3Client.send(command);
-			// } catch (caught) {
-			// 	if (
-			// 		caught instanceof S3ServiceException &&
-			// 		caught.name === "EntityTooLarge"
-			// 	) {
-			// 		throw new TRPCError({
-			// 			code: "PAYLOAD_TOO_LARGE",
-			// 			message: "Uploaded file is too large!",
-			// 		});
-			// 	}
+			const command = new PutObjectCommand({
+				Bucket: env.AWS_S3_BUCKET_NAME,
+				Key: id,
+				Body: image as Buffer,
+			});
+			
+			try {
+				const response = await s3Client.send(command);
+			} catch (caught) {
+				if (
+					caught instanceof S3ServiceException &&
+					caught.name === "EntityTooLarge"
+				) {
+					throw new TRPCError({
+						code: "PAYLOAD_TOO_LARGE",
+						message: "Uploaded file is too large!",
+					});
+				}
 
-			// 	if (caught instanceof Error) {
-			// 		throw new TRPCError({
-			// 			code: "INTERNAL_SERVER_ERROR",
-			// 			message: caught.message,
-			// 		});
-			// 	}
+				if (caught instanceof Error) {
+					throw new TRPCError({
+						code: "INTERNAL_SERVER_ERROR",
+						message: caught.message,
+					});
+				}
 
-			// 	throw caught;
-			// }
+				throw caught;
+			}
+		}),
+	"": publicProcedure
+		.input(z.object({
+			// collectionId: z.number().optional(),
+			// tagId: z.number().optional()
+		})).query(async ({ input }) => {
+			return await db.select().from(photos).orderBy(desc(photos.takenAt));
 		}),
 	getLatestInCollection: publicProcedure
 		.input(

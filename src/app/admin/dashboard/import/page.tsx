@@ -5,10 +5,9 @@ import { ImageUpIcon } from "lucide-react";
 import { useCallback, useEffect, useState } from "react";
 import { useDropzone } from "react-dropzone";
 import { useForm } from "react-hook-form";
-import { useDebouncedCallback } from "use-debounce";
 import type { z } from "zod";
 import { Combobox } from "~/components/combobox";
-import { MultiAsyncSelect } from "~/components/multi-async-select";
+import ReactSelect from "~/components/react-select";
 import { Button } from "~/components/ui/button";
 import { Checkbox } from "~/components/ui/checkbox";
 import {
@@ -30,16 +29,13 @@ type FileWithPreview = File & {
 export default function ImportPage() {
 	const mutation = api.photos.create.useMutation();
 	const collections = api.collections.all.useQuery();
+	const tags = api.tags.all.useQuery();
 
-	const tagSearch = api.tags.search.useMutation();
-	useEffect(tagSearch.mutate, []);
-	const handleSearch = useDebouncedCallback((value: string) => {
-		// if (!value) {
-		// 	tagSearch.reset();
-		// } else {
-		tagSearch.mutate({ searchString: value });
-		// }
-	}, 500);
+	const options =
+		tags.data?.map((tag) => ({
+			value: tag.id,
+			label: tag.name,
+		})) || [];
 
 	const form = useForm<z.infer<typeof importPhotoSchema>>({
 		resolver: zodResolver(importPhotoSchema),
@@ -219,19 +215,13 @@ export default function ImportPage() {
 							<FormItem className="flex items-center">
 								<FormLabel>Apply tags:</FormLabel>
 								<FormControl>
-									<MultiAsyncSelect
-										loading={tagSearch.isPending}
-										// error={searchMutation.error}
-										options={
-											tagSearch.data?.map((tag) => ({
-												value: tag.id.toString(),
-												label: tag.name,
-											})) || []
-										}
-										onValueChange={field.onChange}
-										className="w-fit"
-										onSearch={handleSearch}
-										async
+									<ReactSelect
+										isMulti={true}
+										options={options}
+										ref={field.ref}
+										value={options.filter((c) => field.value.includes(c.value))}
+										onChange={(val) => field.onChange(val.map((c) => c.value))}
+										className="w-full"
 									/>
 								</FormControl>
 								<FormMessage />

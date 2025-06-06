@@ -3,7 +3,7 @@ import { z } from "zod";
 export const importPhotoSchema = z.object({
 	exif: z.coerce.boolean(),
 	collection: z.string(),
-	tags: z.array(z.string()),
+	tags: z.array(z.coerce.number()),
 	image: z.custom<File>(),
 });
 

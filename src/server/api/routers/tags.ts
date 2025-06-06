@@ -18,6 +18,10 @@ export const tagsRouter = createTRPCRouter({
 			});
 		}),
 
+	all: publicProcedure.query(async ({ ctx }) => {
+		return await ctx.db.query.tags.findMany();
+	}),
+
 	withCount: publicProcedure.query(async ({ ctx }) => {
 		const allTags = await ctx.db
 			.select({

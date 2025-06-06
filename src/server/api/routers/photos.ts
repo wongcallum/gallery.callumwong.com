@@ -124,7 +124,7 @@ export const photoRouter = createTRPCRouter({
 				for (const tag of input.tags) {
 					await tx.insert(photosToTags).values({
 						photoId: id,
-						tagId: Number.parseInt(tag),
+						tagId: tag,
 					});
 				}
 			});

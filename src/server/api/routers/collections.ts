@@ -39,7 +39,7 @@ export const collectionRouter = createTRPCRouter({
 		for (const collection of allCollections) {
 			if (!collection.thumbnailPhotoURL) {
 				const latestPhoto = await db
-					.select({ url: photos.url })
+					.select({ url: photos.thumbnailUrl })
 					.from(photos)
 					.where(eq(photos.collectionId, collection.id))
 					.orderBy(desc(photos.takenAt))

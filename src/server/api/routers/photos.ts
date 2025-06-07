@@ -1,7 +1,8 @@
 import { PutObjectCommand, S3ServiceException } from "@aws-sdk/client-s3";
 import { TRPCError } from "@trpc/server";
-import { desc, eq } from "drizzle-orm";
+import { desc, eq, getTableColumns, inArray, sql } from "drizzle-orm";
 import exifr from "exifr";
+import sharp from "sharp";
 import { z } from "zod";
 import { env } from "~/env";
 import s3Client from "~/lib/s3";
@@ -12,7 +13,13 @@ import {
 	publicProcedure,
 } from "~/server/api/trpc";
 import { db } from "~/server/db";
-import { cameras, lenses, photos, photosToTags } from "~/server/db/schema";
+import {
+	cameras,
+	lenses,
+	photos,
+	photosToTags,
+	tags,
+} from "~/server/db/schema";
 
 async function insertOrSelectLens(
 	model: string,
@@ -84,12 +91,15 @@ export const photoRouter = createTRPCRouter({
 				: null;
 
 			const id = crypto.randomUUID();
+			const thumbnailKey = `${id}-thumb`;
+
 			const newPhoto: typeof photos.$inferInsert = {
 				id,
 				uploadedById: ctx.session.user.id,
 				collectionId: collection?.id,
 				takenAt: new Date(input.image.lastModified),
 				url: `https://s3.${env.AWS_S3_REGION}.amazonaws.com/${env.AWS_S3_BUCKET_NAME}/${id}`,
+				thumbnailUrl: `https://s3.${env.AWS_S3_REGION}.amazonaws.com/${env.AWS_S3_BUCKET_NAME}/${thumbnailKey}`,
 			};
 
 			const exif = await exifr.parse(image, {
@@ -121,6 +131,7 @@ export const photoRouter = createTRPCRouter({
 				newPhoto.focalLength = exif.FocalLength;
 			}
 
+			// add images to database
 			await db.transaction(async (tx) => {
 				await tx.insert(photos).values(newPhoto);
 
@@ -132,14 +143,48 @@ export const photoRouter = createTRPCRouter({
 				}
 			});
 
-			const command = new PutObjectCommand({
-				Bucket: env.AWS_S3_BUCKET_NAME,
-				Key: id,
-				Body: image as Buffer,
-			});
-			
+			// process images
+			const optimised = await sharp(image)
+				.rotate()
+				.resize({
+					width: 2160,
+					height: 2160,
+					fit: "inside",
+					withoutEnlargement: true,
+				})
+				.toFormat("jpeg", {
+					quality: 80,
+					mozjpeg: true,
+				})
+				.toBuffer();
+
+			const thumbnail = await sharp(optimised)
+				.resize({
+					width: 720,
+					height: 720,
+					fit: "inside",
+				})
+				.toFormat("webp", {
+					quality: 60,
+					effort: 2,
+				})
+				.toBuffer();
+
 			try {
-				const response = await s3Client.send(command);
+				await s3Client.send(
+					new PutObjectCommand({
+						Bucket: env.AWS_S3_BUCKET_NAME,
+						Key: id,
+						Body: optimised,
+					}),
+				);
+				await s3Client.send(
+					new PutObjectCommand({
+						Bucket: env.AWS_S3_BUCKET_NAME,
+						Key: thumbnailKey,
+						Body: thumbnail,
+					}),
+				);
 			} catch (caught) {
 				if (
 					caught instanceof S3ServiceException &&
@@ -161,12 +206,25 @@ export const photoRouter = createTRPCRouter({
 				throw caught;
 			}
 		}),
-	"": publicProcedure
-		.input(z.object({
-			// collectionId: z.number().optional(),
-			// tagId: z.number().optional()
-		})).query(async ({ input }) => {
-			return await db.select().from(photos).orderBy(desc(photos.takenAt));
+	search: publicProcedure
+		.input(z.array(z.number()))
+		.mutation(async ({ input }) => {
+			if (input.length === 0) {
+				return await db.select().from(photos).orderBy(desc(photos.takenAt));
+			}
+
+			return await db
+				.select({
+					...getTableColumns(photos),
+					count: sql<number>`cast(count(${tags.id}) as int)`,
+				})
+				.from(photos)
+				.innerJoin(photosToTags, eq(photos.id, photosToTags.photoId))
+				.innerJoin(tags, eq(photosToTags.tagId, tags.id))
+				.where(inArray(tags.id, input))
+				.having(({ count }) => eq(count, input.length))
+				.groupBy(photos.id)
+				.orderBy(desc(photos.takenAt));
 		}),
 	getLatestInCollection: publicProcedure
 		.input(

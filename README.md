@@ -4,12 +4,12 @@
 
 - collectons page
 - photo lightbox
-- image optimisation on upload
 
 ## Medium Priority
 
 - edit tags
 - edit collections
+- async collections
 
 ## Low Priority
 

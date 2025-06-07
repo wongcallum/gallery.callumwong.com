@@ -54,6 +54,7 @@ export const photos = createTable(
 		lensId: d.integer().references(() => lenses.id),
 		title: d.text({ length: 256 }),
 		url: d.text({ length: 2048 }).notNull(),
+		thumbnailUrl: d.text({ length: 2048 }).notNull(),
 	}),
 	(t) => [
 		index("uploaded_by_idx").on(t.uploadedById),

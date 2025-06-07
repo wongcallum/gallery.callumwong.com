@@ -55,6 +55,8 @@ export const photos = createTable(
 		title: d.text({ length: 256 }),
 		url: d.text({ length: 2048 }).notNull(),
 		thumbnailUrl: d.text({ length: 2048 }).notNull(),
+		thumbnailWidth: d.integer().notNull(),
+		thumbnailHeight: d.integer().notNull(),
 	}),
 	(t) => [
 		index("uploaded_by_idx").on(t.uploadedById),

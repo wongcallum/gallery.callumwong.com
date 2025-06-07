@@ -8,9 +8,13 @@ import type { RouterOutputs } from "~/trpc/react";
 
 type PhotosOutput = ArrayElement<RouterOutputs["photos"]["search"]>;
 
-export function Photo({ photo }: { photo: PhotosOutput }) {
+interface PhotoProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
+	photo: PhotosOutput;
+}
+
+export function Photo({ photo, ...props }: PhotoProps) {
 	return (
-		<div className="relative">
+		<button className="relative" {...props}>
 			<img
 				className="h-full w-full rounded-md object-cover"
 				src={photo.thumbnailUrl || "/frown.svg"}
@@ -30,6 +34,6 @@ export function Photo({ photo }: { photo: PhotosOutput }) {
 					<span>{apertureString(photo.aperture)}</span>
 				</div>
 			</div>
-		</div>
+		</button>
 	);
 }

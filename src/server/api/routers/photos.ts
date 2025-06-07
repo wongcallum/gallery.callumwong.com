@@ -93,6 +93,36 @@ export const photoRouter = createTRPCRouter({
 			const id = crypto.randomUUID();
 			const thumbnailKey = `${id}-thumb`;
 
+			// process images
+			const optimised = await sharp(image)
+				.rotate()
+				.resize({
+					width: 2160,
+					height: 2160,
+					fit: "inside",
+					withoutEnlargement: true,
+				})
+				.toFormat("jpeg", {
+					quality: 80,
+					mozjpeg: true,
+				})
+				.toBuffer();
+
+			const thumbnail = sharp(optimised)
+				.resize({
+					width: 720,
+					height: 720,
+					fit: "inside",
+				})
+				.toFormat("webp", {
+					quality: 60,
+					effort: 2,
+				});
+
+			const { width: thumbnailWidth, height: thumbnailHeight } =
+				await thumbnail.metadata();
+
+			// add images to db
 			const newPhoto: typeof photos.$inferInsert = {
 				id,
 				uploadedById: ctx.session.user.id,
@@ -100,6 +130,8 @@ export const photoRouter = createTRPCRouter({
 				takenAt: new Date(input.image.lastModified),
 				url: `https://s3.${env.AWS_S3_REGION}.amazonaws.com/${env.AWS_S3_BUCKET_NAME}/${id}`,
 				thumbnailUrl: `https://s3.${env.AWS_S3_REGION}.amazonaws.com/${env.AWS_S3_BUCKET_NAME}/${thumbnailKey}`,
+				thumbnailWidth,
+				thumbnailHeight,
 			};
 
 			const exif = await exifr.parse(image, {
@@ -131,7 +163,6 @@ export const photoRouter = createTRPCRouter({
 				newPhoto.focalLength = exif.FocalLength;
 			}
 
-			// add images to database
 			await db.transaction(async (tx) => {
 				await tx.insert(photos).values(newPhoto);
 
@@ -143,33 +174,7 @@ export const photoRouter = createTRPCRouter({
 				}
 			});
 
-			// process images
-			const optimised = await sharp(image)
-				.rotate()
-				.resize({
-					width: 2160,
-					height: 2160,
-					fit: "inside",
-					withoutEnlargement: true,
-				})
-				.toFormat("jpeg", {
-					quality: 80,
-					mozjpeg: true,
-				})
-				.toBuffer();
-
-			const thumbnail = await sharp(optimised)
-				.resize({
-					width: 720,
-					height: 720,
-					fit: "inside",
-				})
-				.toFormat("webp", {
-					quality: 60,
-					effort: 2,
-				})
-				.toBuffer();
-
+			// upload images
 			try {
 				await s3Client.send(
 					new PutObjectCommand({
@@ -182,7 +187,7 @@ export const photoRouter = createTRPCRouter({
 					new PutObjectCommand({
 						Bucket: env.AWS_S3_BUCKET_NAME,
 						Key: thumbnailKey,
-						Body: thumbnail,
+						Body: await thumbnail.toBuffer(),
 					}),
 				);
 			} catch (caught) {

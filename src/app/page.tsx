@@ -1,8 +1,10 @@
 "use client";
 import React, { useEffect } from "react";
 import type { DateRange } from "react-day-picker";
+import { RowsPhotoAlbum } from "react-photo-album";
 import type { MultiValue } from "react-select";
 import { useDebouncedCallback } from "use-debounce";
+import { Lightbox } from "yet-another-react-lightbox";
 import { Combobox } from "~/components/combobox";
 import { DatePickerWithRange } from "~/components/date-range-picker";
 import ReactSelect, { type OptionType } from "~/components/react-select";
@@ -10,7 +12,9 @@ import { Input } from "~/components/ui/input";
 import { Label } from "~/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "~/components/ui/tabs";
 import { api } from "~/trpc/react";
-import { Photo } from "./_components/photo";
+
+import "yet-another-react-lightbox/styles.css";
+import "react-photo-album/rows.css";
 
 export default function Home() {
 	const cameras = api.filter.cameras.useQuery();
@@ -31,7 +35,8 @@ export default function Home() {
 	const [camera, setCamera] = React.useState<string>();
 	const [lens, setLens] = React.useState<string>();
 	const [date, setDate] = React.useState<DateRange | undefined>();
-	const [tagFilter, setTagFilter] = React.useState<number[]>();
+
+	const [index, setIndex] = React.useState(-1);
 
 	const searchDebounced = useDebouncedCallback(
 		async (values: MultiValue<OptionType>) => {
@@ -74,7 +79,7 @@ export default function Home() {
 				/>
 				<DatePickerWithRange date={date} setDate={setDate} />
 			</div>
-			<div className="border-l p-4">
+			<div className="w-full border-l p-4">
 				<TabsContent value="collection">
 					<Input />
 					<div className="columns-2 gap-4 py-4 sm:columns-3 sm:gap-8">
@@ -98,13 +103,38 @@ export default function Home() {
 						isMulti={true}
 						options={options}
 						onChange={(val) => searchDebounced(val)}
-						className="w-full"
 					/>
-					<div className="columns-2 gap-4 py-4 sm:columns-3 sm:gap-8 md:columns-4">
-						{searchPhotos.data?.map((photo) => (
-							<Photo photo={photo} key={photo.id} />
-						))}
-					</div>
+					<RowsPhotoAlbum
+						photos={
+							searchPhotos.data?.map((photo) => ({
+								src: photo.thumbnailUrl,
+								width: photo.thumbnailWidth,
+								height: photo.thumbnailHeight,
+								key: photo.id,
+								alt: photo.title || photo.id,
+								title: photo.title || "",
+							})) || []
+						}
+						targetRowHeight={150}
+						onClick={({ index }) => setIndex(index)}
+						render={{
+							container: ({ ref, ...rest }) => (
+								<div ref={ref} {...rest} className={`${rest.className} py-4`} />
+							),
+							// biome-ignore lint/a11y/useAltText: <explanation>
+							image: (props) => (
+								<img {...props} className={`${props.className} rounded-md`} />
+							),
+						}}
+					/>
+					<Lightbox
+						index={index}
+						slides={searchPhotos.data?.map((photo) => ({
+							src: photo.url,
+						}))}
+						open={index >= 0}
+						close={() => setIndex(-1)}
+					/>
 				</TabsContent>
 			</div>
 		</Tabs>

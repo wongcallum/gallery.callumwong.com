@@ -1,5 +1,5 @@
-import { relations, sql } from "drizzle-orm";
-import { index, primaryKey, sqliteTableCreator } from "drizzle-orm/sqlite-core";
+import { relations } from "drizzle-orm";
+import { index, pgTableCreator, primaryKey } from "drizzle-orm/pg-core";
 import type { AdapterAccount } from "next-auth/adapters";
 
 /**
@@ -8,14 +8,14 @@ import type { AdapterAccount } from "next-auth/adapters";
  *
  * @see https://orm.drizzle.team/docs/goodies#multi-project-schema
  */
-export const createTable = sqliteTableCreator(
+export const createTable = pgTableCreator(
 	(name) => `gallery.callumwong.com_${name}`,
 );
 
 export const collections = createTable("collection", (d) => ({
-	id: d.integer().primaryKey({ autoIncrement: true }),
+	id: d.serial().primaryKey(),
 	createdById: d
-		.text({ length: 255 })
+		.text()
 		.notNull()
 		.references(() => users.id),
 	name: d.text().notNull(),
@@ -41,19 +41,19 @@ export const photos = createTable(
 		id: d.text().primaryKey(),
 		collectionId: d.integer().references(() => collections.id),
 		uploadedById: d
-			.text({ length: 255 })
+			.text()
 			.notNull()
 			.references(() => users.id),
-		takenAt: d.integer({ mode: "timestamp" }),
+		takenAt: d.timestamp(),
 		aperture: d.real(),
 		shutterSpeed: d.real(),
 		focalLength: d.real(),
 		isoSpeed: d.integer(),
 		cameraId: d.integer().references(() => cameras.id),
 		lensId: d.integer().references(() => lenses.id),
-		title: d.text({ length: 256 }),
-		url: d.text({ length: 2048 }).notNull(),
-		thumbnailUrl: d.text({ length: 2048 }).notNull(),
+		title: d.text(),
+		url: d.text().notNull(),
+		thumbnailUrl: d.text().notNull(),
 		thumbnailWidth: d.integer().notNull(),
 		thumbnailHeight: d.integer().notNull(),
 	}),
@@ -80,20 +80,20 @@ export const photosRelations = relations(photos, ({ one, many }) => ({
 }));
 
 export const cameras = createTable("camera", (d) => ({
-	id: d.integer().primaryKey({ autoIncrement: true }),
+	id: d.serial().primaryKey(),
 	serial: d.integer().unique().notNull(),
 	name: d.text().notNull(),
 }));
 
 export const lenses = createTable("lens", (d) => ({
-	id: d.integer().primaryKey({ autoIncrement: true }),
+	id: d.serial().primaryKey(),
 	// serial: d.integer().unique().notNull(),
 	name: d.text().notNull().unique(),
 }));
 
 export const tags = createTable("tag", (d) => ({
-	id: d.integer().primaryKey({ autoIncrement: true }),
-	name: d.text({ length: 256 }).unique().notNull(),
+	id: d.serial().primaryKey(),
+	name: d.text().unique().notNull(),
 }));
 
 export const tagsRelations = relations(tags, ({ many }) => ({
@@ -132,14 +132,14 @@ export const photosToTagsRelations = relations(photosToTags, ({ one }) => ({
 
 export const users = createTable("user", (d) => ({
 	id: d
-		.text({ length: 255 })
+		.text()
 		.notNull()
 		.primaryKey()
 		.$defaultFn(() => crypto.randomUUID()),
-	name: d.text({ length: 255 }),
-	email: d.text({ length: 255 }).notNull(),
-	emailVerified: d.integer({ mode: "timestamp" }).default(sql`(unixepoch())`),
-	image: d.text({ length: 255 }),
+	name: d.text(),
+	email: d.text().notNull(),
+	emailVerified: d.timestamp().defaultNow(),
+	image: d.text(),
 }));
 
 export const usersRelations = relations(users, ({ many }) => ({
@@ -150,19 +150,19 @@ export const accounts = createTable(
 	"account",
 	(d) => ({
 		userId: d
-			.text({ length: 255 })
+			.text()
 			.notNull()
 			.references(() => users.id),
-		type: d.text({ length: 255 }).$type<AdapterAccount["type"]>().notNull(),
-		provider: d.text({ length: 255 }).notNull(),
-		providerAccountId: d.text({ length: 255 }).notNull(),
+		type: d.text().$type<AdapterAccount["type"]>().notNull(),
+		provider: d.text().notNull(),
+		providerAccountId: d.text().notNull(),
 		refresh_token: d.text(),
 		access_token: d.text(),
 		expires_at: d.integer(),
-		token_type: d.text({ length: 255 }),
-		scope: d.text({ length: 255 }),
+		token_type: d.text(),
+		scope: d.text(),
 		id_token: d.text(),
-		session_state: d.text({ length: 255 }),
+		session_state: d.text(),
 	}),
 	(t) => [
 		primaryKey({
@@ -179,12 +179,12 @@ export const accountsRelations = relations(accounts, ({ one }) => ({
 export const sessions = createTable(
 	"session",
 	(d) => ({
-		sessionToken: d.text({ length: 255 }).notNull().primaryKey(),
+		sessionToken: d.text().notNull().primaryKey(),
 		userId: d
-			.text({ length: 255 })
+			.text()
 			.notNull()
 			.references(() => users.id),
-		expires: d.integer({ mode: "timestamp" }).notNull(),
+		expires: d.timestamp().notNull(),
 	}),
 	(t) => [index("session_userId_idx").on(t.userId)],
 );
@@ -196,9 +196,9 @@ export const sessionsRelations = relations(sessions, ({ one }) => ({
 export const verificationTokens = createTable(
 	"verification_token",
 	(d) => ({
-		identifier: d.text({ length: 255 }).notNull(),
-		token: d.text({ length: 255 }).notNull(),
-		expires: d.integer({ mode: "timestamp" }).notNull(),
+		identifier: d.text().notNull(),
+		token: d.text().notNull(),
+		expires: d.timestamp().notNull(),
 	}),
 	(t) => [primaryKey({ columns: [t.identifier, t.token] })],
 );

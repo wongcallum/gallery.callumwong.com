@@ -5,6 +5,7 @@ import { RowsPhotoAlbum } from "react-photo-album";
 import type { MultiValue } from "react-select";
 import { useDebouncedCallback } from "use-debounce";
 import { Lightbox } from "yet-another-react-lightbox";
+import Captions from "yet-another-react-lightbox/plugins/captions";
 import { Combobox } from "~/components/combobox";
 import { DatePickerWithRange } from "~/components/date-range-picker";
 import ReactSelect, { type OptionType } from "~/components/react-select";
@@ -14,7 +15,10 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "~/components/ui/tabs";
 import { api } from "~/trpc/react";
 
 import "yet-another-react-lightbox/styles.css";
+import "yet-another-react-lightbox/plugins/captions.css";
 import "react-photo-album/rows.css";
+import { Aperture, Film, Timer } from "lucide-react";
+import { apertureString, shutterSpeedString } from "~/lib/utils";
 
 export default function Home() {
 	const cameras = api.filter.cameras.useQuery();
@@ -24,7 +28,7 @@ export default function Home() {
 
 	const searchPhotos = api.photos.search.useMutation();
 
-	useEffect(() => searchPhotos.mutate([]), []);
+	useEffect(() => searchPhotos.mutate([]), [searchPhotos.mutate]);
 
 	const options =
 		tags.data?.map((tag) => ({
@@ -131,9 +135,47 @@ export default function Home() {
 						index={index}
 						slides={searchPhotos.data?.map((photo) => ({
 							src: photo.url,
+							title: photo.title,
+							description: (
+								<div className="flex justify-center gap-12 md:gap-24">
+									<div className="flex flex-row items-center gap-1">
+										<Film />
+										<span>{photo.isoSpeed}</span>
+									</div>
+									<div className="flex flex-row items-center gap-1">
+										<Timer />
+										<span>{shutterSpeedString(photo.shutterSpeed)}</span>
+									</div>
+									<div className="flex flex-row items-center gap-1">
+										<Aperture />
+										<span>{apertureString(photo.aperture)}</span>
+									</div>
+								</div>
+							),
 						}))}
 						open={index >= 0}
 						close={() => setIndex(-1)}
+						plugins={[Captions]}
+						captions={{
+							showToggle: true,
+						}}
+						styles={{
+							captionsTitleContainer: {
+								display: "flex",
+								justifyContent: "center",
+							},
+						}}
+						render={{
+							slide: ({ slide }) => {
+								return (
+									<img
+										src={slide.src}
+										alt={slide.alt}
+										className="max-h-full xl:max-h-9/10"
+									/>
+								);
+							},
+						}}
 					/>
 				</TabsContent>
 			</div>

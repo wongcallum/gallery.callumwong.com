@@ -12,7 +12,7 @@ import { api } from "~/trpc/react";
 import "yet-another-react-lightbox/styles.css";
 import "yet-another-react-lightbox/plugins/captions.css";
 import "react-photo-album/rows.css";
-import Gallery from "~/components/gallery";
+import Gallery from "~/app/(home)/_components/gallery";
 
 const formSchema = z.object({
 	search: z.array(z.coerce.number()),

@@ -38,7 +38,6 @@ export default function CollectionsPage() {
 		defaultValues: {
 			name: "",
 			description: "",
-			location: "",
 		},
 	});
 
@@ -88,19 +87,6 @@ export default function CollectionsPage() {
 								render={({ field }) => (
 									<FormItem className="grid grid-cols-4 items-center gap-4">
 										<FormLabel>Description</FormLabel>
-										<FormControl>
-											<Input className="col-span-3" {...field} />
-										</FormControl>
-										<FormMessage />
-									</FormItem>
-								)}
-							/>
-							<FormField
-								control={form.control}
-								name="location"
-								render={({ field }) => (
-									<FormItem className="grid grid-cols-4 items-center gap-4">
-										<FormLabel>Location</FormLabel>
 										<FormControl>
 											<Input className="col-span-3" {...field} />
 										</FormControl>

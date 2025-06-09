@@ -15,7 +15,6 @@ import {
 export type Collection = {
 	name: string;
 	description: string;
-	location: string;
 	photoCount: number;
 };
 
@@ -29,12 +28,6 @@ export const columns: CollectionColumnDef<Collection>[] = [
 	{
 		accessorKey: "description",
 		header: "Description",
-	},
-	{
-		accessorKey: "location",
-		header: ({ column }) => (
-			<DataTableColumnHeader column={column} title="Location" />
-		),
 	},
 	{
 		accessorKey: "photoCount",

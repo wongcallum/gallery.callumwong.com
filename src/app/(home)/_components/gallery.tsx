@@ -1,17 +1,26 @@
+"use client";
+
 import { Aperture, Film, Timer } from "lucide-react";
+import { useSession } from "next-auth/react";
 import { useState } from "react";
 import { RowsPhotoAlbum } from "react-photo-album";
 import { Lightbox } from "yet-another-react-lightbox";
 import Captions from "yet-another-react-lightbox/plugins/captions";
 import Fullscreen from "yet-another-react-lightbox/plugins/fullscreen";
 import Zoom from "yet-another-react-lightbox/plugins/zoom";
+import { AdminPlugin } from "~/lib/lightbox-admin-plugin";
 import { apertureString, shutterSpeedString } from "~/lib/utils";
 import type { RouterOutputs } from "~/trpc/react";
 
 type PhotosOutput = RouterOutputs["photos"]["search"];
 
 export default function Gallery({ photos }: { photos: PhotosOutput }) {
+	const { data: session } = useSession();
+
 	const [index, setIndex] = useState(-1);
+
+	const lightboxPlugins = [Captions, Fullscreen, Zoom];
+	if (session?.user) lightboxPlugins.push(AdminPlugin);
 
 	return (
 		<>
@@ -67,7 +76,7 @@ export default function Gallery({ photos }: { photos: PhotosOutput }) {
 				}}
 				open={index >= 0}
 				close={() => setIndex(-1)}
-				plugins={[Captions, Fullscreen, Zoom]}
+				plugins={lightboxPlugins}
 				captions={{
 					showToggle: true,
 				}}
@@ -75,6 +84,9 @@ export default function Gallery({ photos }: { photos: PhotosOutput }) {
 					captionsTitleContainer: {
 						display: "flex",
 						justifyContent: "center",
+					},
+					root: {
+						zIndex: 49,
 					},
 				}}
 				render={{

@@ -29,7 +29,6 @@ export const collectionRouter = createTRPCRouter({
 			await ctx.db.insert(collections).values({
 				name: input.name,
 				description: input.description,
-				location: input.location,
 				createdById: ctx.session.user.id,
 			});
 		}),

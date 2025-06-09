@@ -73,7 +73,6 @@ export default function ImportPage() {
 		fileRejections,
 	} = useDropzone({
 		onDrop,
-		maxFiles: 10,
 		maxSize: 25 * 1024 * 1024,
 		accept: {
 			"image/*": [],
@@ -136,7 +135,7 @@ export default function ImportPage() {
 							!isDragReject && !(fileRejections.length > 0),
 					})}
 				>
-					Max size: 25MiB
+					Max size: 25 MiB
 				</span>
 			</div>
 			<div className="mt-2 grid grid-cols-2 gap-4 py-4 md:grid-cols-4 xl:grid-cols-6">

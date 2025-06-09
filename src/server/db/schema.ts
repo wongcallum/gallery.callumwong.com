@@ -20,7 +20,6 @@ export const collections = createTable("collection", (d) => ({
 		.references(() => users.id),
 	name: d.text().notNull(),
 	description: d.text().default("").notNull(),
-	location: d.text().default("").notNull(),
 	thumbnailPhotoURL: d.text(),
 }));
 
@@ -107,11 +106,15 @@ export const photosToTags = createTable(
 		photoId: d
 			.text()
 			.notNull()
-			.references(() => photos.id),
+			.references(() => photos.id, {
+				onDelete: "cascade",
+			}),
 		tagId: d
 			.integer()
 			.notNull()
-			.references(() => tags.id),
+			.references(() => tags.id, {
+				onDelete: "cascade",
+			}),
 	}),
 	(t) => [primaryKey({ columns: [t.photoId, t.tagId] })],
 );

@@ -7,7 +7,7 @@ import "yet-another-react-lightbox/styles.css";
 import "yet-another-react-lightbox/plugins/captions.css";
 import "react-photo-album/rows.css";
 import Link from "next/link";
-import Gallery from "~/components/gallery";
+import Gallery from "../../_components/gallery";
 
 export default function CollectionPage() {
 	const params = useParams<{ id: string }>();

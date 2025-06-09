@@ -1,4 +1,8 @@
-import { PutObjectCommand, S3ServiceException } from "@aws-sdk/client-s3";
+import {
+	DeleteObjectCommand,
+	PutObjectCommand,
+	S3ServiceException,
+} from "@aws-sdk/client-s3";
 import { TRPCError } from "@trpc/server";
 import { desc, eq, getTableColumns, inArray, sql } from "drizzle-orm";
 import exifr from "exifr";
@@ -6,7 +10,7 @@ import sharp from "sharp";
 import { z } from "zod";
 import { env } from "~/env";
 import s3Client from "~/lib/s3";
-import { importPhotoSchema } from "~/lib/schemas";
+import { editPhotoSchema, importPhotoSchema } from "~/lib/schemas";
 import {
 	createTRPCRouter,
 	protectedProcedure,
@@ -85,7 +89,7 @@ export const photoRouter = createTRPCRouter({
 				: null;
 
 			const collection = collectionId
-				? await db.query.collections.findFirst({
+				? await ctx.db.query.collections.findFirst({
 						where: (collections, { eq }) => eq(collections.id, collectionId),
 					})
 				: null;
@@ -163,14 +167,16 @@ export const photoRouter = createTRPCRouter({
 				newPhoto.focalLength = exif.FocalLength;
 			}
 
-			await db.transaction(async (tx) => {
+			await ctx.db.transaction(async (tx) => {
 				await tx.insert(photos).values(newPhoto);
 
-				for (const tag of input.tags) {
-					await tx.insert(photosToTags).values({
-						photoId: id,
-						tagId: tag,
-					});
+				if (input.tags.length > 0) {
+					await tx.insert(photosToTags).values(
+						input.tags.map((tagId) => ({
+							photoId: id,
+							tagId,
+						})),
+					);
 				}
 			});
 
@@ -211,18 +217,19 @@ export const photoRouter = createTRPCRouter({
 				throw caught;
 			}
 		}),
+
 	search: publicProcedure
 		.input(
 			z.object({
 				tags: z.array(z.number()),
 			}),
 		)
-		.query(async ({ input }) => {
+		.query(async ({ ctx, input }) => {
 			if (input.tags.length === 0 || input.tags[0] === 0) {
-				return await db.select().from(photos).orderBy(desc(photos.takenAt));
+				return await ctx.db.select().from(photos).orderBy(desc(photos.takenAt));
 			}
 
-			return await db
+			return await ctx.db
 				.select({
 					...getTableColumns(photos),
 					count: sql<number>`cast(count(${tags.id}) as int)`,
@@ -235,14 +242,26 @@ export const photoRouter = createTRPCRouter({
 				.groupBy(photos.id)
 				.orderBy(desc(photos.takenAt));
 		}),
+
+	withTags: protectedProcedure
+		.input(z.string())
+		.query(async ({ ctx, input }) => {
+			return await ctx.db.query.photos.findFirst({
+				where: eq(photos.id, input),
+				with: {
+					photosToTags: true,
+				},
+			});
+		}),
+
 	getLatestInCollection: publicProcedure
 		.input(
 			z.object({
 				collectionId: z.number(),
 			}),
 		)
-		.query(async ({ input }) => {
-			const latestPhoto = await db
+		.query(async ({ ctx, input }) => {
+			const latestPhoto = await ctx.db
 				.select({ url: photos.url })
 				.from(photos)
 				.where(eq(photos.collectionId, input.collectionId))
@@ -250,5 +269,77 @@ export const photoRouter = createTRPCRouter({
 				.limit(1);
 
 			return latestPhoto[0]?.url;
+		}),
+
+	delete: protectedProcedure
+		.input(z.string())
+		.mutation(async ({ ctx, input }) => {
+			const thumbnailKey = `${input}-thumb`;
+
+			try {
+				await s3Client.send(
+					new DeleteObjectCommand({
+						Bucket: env.AWS_S3_BUCKET_NAME,
+						Key: input,
+					}),
+				);
+				await s3Client.send(
+					new DeleteObjectCommand({
+						Bucket: env.AWS_S3_BUCKET_NAME,
+						Key: thumbnailKey,
+					}),
+				);
+			} catch (caught) {
+				if (caught instanceof Error) {
+					throw new TRPCError({
+						code: "INTERNAL_SERVER_ERROR",
+						message: caught.message,
+					});
+				}
+
+				throw caught;
+			}
+
+			await ctx.db.delete(photos).where(eq(photos.id, input));
+		}),
+
+	edit: protectedProcedure
+		.input(editPhotoSchema)
+		.mutation(async ({ ctx, input }) => {
+			await ctx.db.transaction(async (tx) => {
+				const collectionId =
+					input.collection === "" ? null : Number.parseInt(input.collection);
+
+				await tx
+					.update(photos)
+					.set({
+						collectionId,
+					})
+					.where(eq(photos.id, input.id));
+
+				const existingTags = await tx
+					.select({ tagId: photosToTags.tagId })
+					.from(photosToTags)
+					.where(eq(photosToTags.photoId, input.id));
+				const existingTagIds = existingTags.map((t) => t.tagId);
+				const tagsUnchanged =
+					existingTagIds.length === input.tags.length &&
+					existingTagIds.every((id) => input.tags.includes(id));
+
+				if (!tagsUnchanged) {
+					await tx
+						.delete(photosToTags)
+						.where(eq(photosToTags.photoId, input.id));
+
+					if (input.tags.length > 0) {
+						await tx.insert(photosToTags).values(
+							input.tags.map((tagId) => ({
+								photoId: input.id,
+								tagId,
+							})),
+						);
+					}
+				}
+			});
 		}),
 });

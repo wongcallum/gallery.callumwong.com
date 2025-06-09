@@ -10,9 +10,14 @@ export const importPhotoSchema = z.object({
 export const createCollectionSchema = z.object({
 	name: z.string().min(1),
 	description: z.string().optional(),
-	location: z.string().optional(),
 });
 
 export const createTagSchema = z.object({
 	name: z.string().min(1),
+});
+
+export const editPhotoSchema = z.object({
+	id: z.string(),
+	collection: z.string(),
+	tags: z.array(z.coerce.number()),
 });

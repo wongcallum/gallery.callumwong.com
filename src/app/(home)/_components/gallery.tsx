@@ -35,7 +35,7 @@ export default function Gallery({ photos }: { photos: PhotosOutput }) {
 						title: photo.title || "",
 					})) || []
 				}
-				targetRowHeight={150}
+				targetRowHeight={200}
 				onClick={({ index }) => setIndex(index)}
 				render={{
 					container: ({ ref, ...rest }) => (

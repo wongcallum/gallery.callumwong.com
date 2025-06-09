@@ -1,5 +1,9 @@
 # TODO
 
+## high
+
+- sidebar responsive (doesnt show on phone)
+
 ## Medium Priority
 
 - edit tags

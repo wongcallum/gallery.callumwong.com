@@ -214,11 +214,11 @@ export const photoRouter = createTRPCRouter({
 	search: publicProcedure
 		.input(
 			z.object({
-				search: z.array(z.number()),
+				tags: z.array(z.number()),
 			}),
 		)
 		.query(async ({ input }) => {
-			if (input.search.length === 0 || input.search[0] === 0) {
+			if (input.tags.length === 0 || input.tags[0] === 0) {
 				return await db.select().from(photos).orderBy(desc(photos.takenAt));
 			}
 
@@ -230,8 +230,8 @@ export const photoRouter = createTRPCRouter({
 				.from(photos)
 				.innerJoin(photosToTags, eq(photos.id, photosToTags.photoId))
 				.innerJoin(tags, eq(photosToTags.tagId, tags.id))
-				.where(inArray(tags.id, input.search))
-				.having(({ count }) => eq(count, input.search.length))
+				.where(inArray(tags.id, input.tags))
+				.having(({ count }) => eq(count, input.tags.length))
 				.groupBy(photos.id)
 				.orderBy(desc(photos.takenAt));
 		}),

@@ -140,10 +140,9 @@ export default function ImportPage() {
 				</span>
 			</div>
 			<div className="mt-2 grid grid-cols-2 gap-4 py-4 md:grid-cols-4 xl:grid-cols-6">
-				{images.map((file, index) => (
+				{images.map((file) => (
 					<div
-						// biome-ignore lint/suspicious/noArrayIndexKey: <explanation>
-						key={index}
+						key={file.preview}
 						className="flex flex-col items-center text-center"
 					>
 						<img src={file.preview} alt={file.name} className="rounded-md" />

@@ -1,4 +1,6 @@
-import { count, desc, eq } from "drizzle-orm";
+import { TRPCError } from "@trpc/server";
+import { count, desc, eq, getTableColumns } from "drizzle-orm";
+import { z } from "zod";
 import { createCollectionSchema } from "~/lib/schemas";
 
 import {
@@ -8,6 +10,17 @@ import {
 } from "~/server/api/trpc";
 import { db } from "~/server/db";
 import { collections, photos } from "~/server/db/schema";
+
+async function getLatestPhoto(collectionId: number) {
+	const latestPhoto = await db
+		.select({ url: photos.thumbnailUrl })
+		.from(photos)
+		.where(eq(photos.collectionId, collectionId))
+		.orderBy(desc(photos.takenAt))
+		.limit(1);
+
+	return latestPhoto[0]?.url || null;
+}
 
 export const collectionRouter = createTRPCRouter({
 	create: protectedProcedure
@@ -24,12 +37,8 @@ export const collectionRouter = createTRPCRouter({
 	all: publicProcedure.query(async ({ ctx }) => {
 		const allCollections = await ctx.db
 			.select({
-				id: collections.id,
-				name: collections.name,
-				description: collections.description,
-				location: collections.location,
+				...getTableColumns(collections),
 				photoCount: count(photos.id),
-				thumbnailPhotoURL: collections.thumbnailPhotoURL,
 			})
 			.from(collections)
 			.leftJoin(photos, eq(collections.id, photos.collectionId))
@@ -38,17 +47,33 @@ export const collectionRouter = createTRPCRouter({
 
 		for (const collection of allCollections) {
 			if (!collection.thumbnailPhotoURL) {
-				const latestPhoto = await db
-					.select({ url: photos.thumbnailUrl })
-					.from(photos)
-					.where(eq(photos.collectionId, collection.id))
-					.orderBy(desc(photos.takenAt))
-					.limit(1);
-
-				collection.thumbnailPhotoURL = latestPhoto[0]?.url || null;
+				collection.thumbnailPhotoURL = await getLatestPhoto(collection.id);
 			}
 		}
 
 		return allCollections;
 	}),
+
+	withPhotos: publicProcedure
+		.input(z.number())
+		.query(async ({ ctx, input }) => {
+			const collection = await ctx.db.query.collections.findFirst({
+				where: eq(collections.id, input),
+				with: {
+					photos: true,
+				},
+			});
+
+			if (!collection)
+				throw new TRPCError({
+					code: "BAD_REQUEST",
+					message: "No collection with id found",
+				});
+
+			if (!collection.thumbnailPhotoURL) {
+				collection.thumbnailPhotoURL = await getLatestPhoto(collection.id);
+			}
+
+			return collection;
+		}),
 });

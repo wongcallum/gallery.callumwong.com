@@ -1,9 +1,5 @@
 # TODO
 
-## High Priority
-
-- collectons page
-
 ## Medium Priority
 
 - edit tags

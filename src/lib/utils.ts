@@ -11,7 +11,7 @@ export type ArrayElement<ArrayType extends readonly unknown[]> =
 export function shutterSpeedString(speed: number | null) {
 	if (!speed) return "N/A";
 	if (speed > 0.25) return `${speed.toString()}"`;
-	return `1/${Math.floor(1 / speed)}`;
+	return `1/${Math.round(1 / speed)}`;
 }
 
 export function apertureString(fStop: number | null) {

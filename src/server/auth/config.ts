@@ -83,4 +83,5 @@ export const authConfig = {
 	pages: {
 		signIn: "/admin/login",
 	},
+	trustHost: true,
 } satisfies NextAuthConfig;

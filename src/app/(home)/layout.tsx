@@ -2,7 +2,6 @@ import { SessionProvider } from "next-auth/react";
 import Link from "next/link";
 import type React from "react";
 import { SidebarProvider } from "~/components/ui/sidebar";
-import { PageSidebar } from "./_components/page-sidebar";
 
 export default function HomeLayout({
 	children,
@@ -11,8 +10,7 @@ export default function HomeLayout({
 		<div className="flex-col">
 			<SessionProvider>
 				<SidebarProvider className="flex w-full flex-row">
-					<PageSidebar />
-					<div className="w-full p-4">{children}</div>
+					{children}
 				</SidebarProvider>
 			</SessionProvider>
 			<footer className="sticky right-0 bottom-0 left-0 z-20 flex flex-col items-center justify-center border-t bg-white p-1 text-center text-foreground md:flex-row md:gap-x-8">

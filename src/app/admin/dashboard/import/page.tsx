@@ -1,13 +1,14 @@
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
-import { ImageUpIcon } from "lucide-react";
+import { AlertCircle, ImageUpIcon } from "lucide-react";
 import { useCallback, useEffect, useState } from "react";
 import { useDropzone } from "react-dropzone";
 import { useForm } from "react-hook-form";
 import type { z } from "zod";
 import { Combobox } from "~/components/combobox";
 import ReactSelect from "~/components/react-select";
+import { Alert, AlertDescription, AlertTitle } from "~/components/ui/alert";
 import { Button } from "~/components/ui/button";
 import { Checkbox } from "~/components/ui/checkbox";
 import {
@@ -166,7 +167,7 @@ export default function ImportPage() {
 			<Form {...form}>
 				<form
 					onSubmit={form.handleSubmit(onSubmit)}
-					className="mt-4 flex flex-col gap-2 text-nowrap"
+					className="my-4 flex flex-col gap-2 text-nowrap"
 				>
 					<FormField
 						control={form.control}
@@ -231,6 +232,14 @@ export default function ImportPage() {
 					</Button>
 				</form>
 			</Form>
+
+			{mutation.isError && (
+				<Alert variant="destructive">
+					<AlertCircle />
+					<AlertTitle>Error</AlertTitle>
+					<AlertDescription>{mutation.error.message}</AlertDescription>
+				</Alert>
+			)}
 		</div>
 	);
 }

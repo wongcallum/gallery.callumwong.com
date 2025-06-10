@@ -1,0 +1,738 @@
+{
+  "id": "e8ef8de1-2c80-4d76-bac1-50f81b5bee7c",
+  "prevId": "00000000-0000-0000-0000-000000000000",
+  "version": "7",
+  "dialect": "postgresql",
+  "tables": {
+    "public.gallery.callumwong.com_account": {
+      "name": "gallery.callumwong.com_account",
+      "schema": "",
+      "columns": {
+        "userId": {
+          "name": "userId",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "type": {
+          "name": "type",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "provider": {
+          "name": "provider",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "providerAccountId": {
+          "name": "providerAccountId",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "refresh_token": {
+          "name": "refresh_token",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "access_token": {
+          "name": "access_token",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "expires_at": {
+          "name": "expires_at",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "token_type": {
+          "name": "token_type",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "scope": {
+          "name": "scope",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "id_token": {
+          "name": "id_token",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "session_state": {
+          "name": "session_state",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        }
+      },
+      "indexes": {
+        "account_user_id_idx": {
+          "name": "account_user_id_idx",
+          "columns": [
+            {
+              "expression": "userId",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {
+        "gallery.callumwong.com_account_userId_gallery.callumwong.com_user_id_fk": {
+          "name": "gallery.callumwong.com_account_userId_gallery.callumwong.com_user_id_fk",
+          "tableFrom": "gallery.callumwong.com_account",
+          "tableTo": "gallery.callumwong.com_user",
+          "columnsFrom": [
+            "userId"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {
+        "gallery.callumwong.com_account_provider_providerAccountId_pk": {
+          "name": "gallery.callumwong.com_account_provider_providerAccountId_pk",
+          "columns": [
+            "provider",
+            "providerAccountId"
+          ]
+        }
+      },
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.gallery.callumwong.com_camera": {
+      "name": "gallery.callumwong.com_camera",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "serial",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "name": {
+          "name": "name",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {
+        "gallery.callumwong.com_camera_name_unique": {
+          "name": "gallery.callumwong.com_camera_name_unique",
+          "nullsNotDistinct": false,
+          "columns": [
+            "name"
+          ]
+        }
+      },
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.gallery.callumwong.com_collection": {
+      "name": "gallery.callumwong.com_collection",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "serial",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "createdById": {
+          "name": "createdById",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "name": {
+          "name": "name",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "description": {
+          "name": "description",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "''"
+        },
+        "thumbnailPhotoURL": {
+          "name": "thumbnailPhotoURL",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "createdAt": {
+          "name": "createdAt",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "lastUpdatedAt": {
+          "name": "lastUpdatedAt",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "gallery.callumwong.com_collection_createdById_gallery.callumwong.com_user_id_fk": {
+          "name": "gallery.callumwong.com_collection_createdById_gallery.callumwong.com_user_id_fk",
+          "tableFrom": "gallery.callumwong.com_collection",
+          "tableTo": "gallery.callumwong.com_user",
+          "columnsFrom": [
+            "createdById"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.gallery.callumwong.com_lens": {
+      "name": "gallery.callumwong.com_lens",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "serial",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "name": {
+          "name": "name",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {
+        "gallery.callumwong.com_lens_name_unique": {
+          "name": "gallery.callumwong.com_lens_name_unique",
+          "nullsNotDistinct": false,
+          "columns": [
+            "name"
+          ]
+        }
+      },
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.gallery.callumwong.com_photo": {
+      "name": "gallery.callumwong.com_photo",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "text",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "collectionId": {
+          "name": "collectionId",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "uploadedById": {
+          "name": "uploadedById",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "createdAt": {
+          "name": "createdAt",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "lastUpdatedAt": {
+          "name": "lastUpdatedAt",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "takenAt": {
+          "name": "takenAt",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "aperture": {
+          "name": "aperture",
+          "type": "real",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "shutterSpeed": {
+          "name": "shutterSpeed",
+          "type": "real",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "focalLength": {
+          "name": "focalLength",
+          "type": "real",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "isoSpeed": {
+          "name": "isoSpeed",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "cameraId": {
+          "name": "cameraId",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "lensId": {
+          "name": "lensId",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "title": {
+          "name": "title",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "url": {
+          "name": "url",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "width": {
+          "name": "width",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "height": {
+          "name": "height",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "thumbnailUrl": {
+          "name": "thumbnailUrl",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "thumbnailWidth": {
+          "name": "thumbnailWidth",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "thumbnailHeight": {
+          "name": "thumbnailHeight",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        }
+      },
+      "indexes": {
+        "uploaded_by_idx": {
+          "name": "uploaded_by_idx",
+          "columns": [
+            {
+              "expression": "uploadedById",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "collection_idx": {
+          "name": "collection_idx",
+          "columns": [
+            {
+              "expression": "collectionId",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {
+        "gallery.callumwong.com_photo_collectionId_gallery.callumwong.com_collection_id_fk": {
+          "name": "gallery.callumwong.com_photo_collectionId_gallery.callumwong.com_collection_id_fk",
+          "tableFrom": "gallery.callumwong.com_photo",
+          "tableTo": "gallery.callumwong.com_collection",
+          "columnsFrom": [
+            "collectionId"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "gallery.callumwong.com_photo_uploadedById_gallery.callumwong.com_user_id_fk": {
+          "name": "gallery.callumwong.com_photo_uploadedById_gallery.callumwong.com_user_id_fk",
+          "tableFrom": "gallery.callumwong.com_photo",
+          "tableTo": "gallery.callumwong.com_user",
+          "columnsFrom": [
+            "uploadedById"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "gallery.callumwong.com_photo_cameraId_gallery.callumwong.com_camera_id_fk": {
+          "name": "gallery.callumwong.com_photo_cameraId_gallery.callumwong.com_camera_id_fk",
+          "tableFrom": "gallery.callumwong.com_photo",
+          "tableTo": "gallery.callumwong.com_camera",
+          "columnsFrom": [
+            "cameraId"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "gallery.callumwong.com_photo_lensId_gallery.callumwong.com_lens_id_fk": {
+          "name": "gallery.callumwong.com_photo_lensId_gallery.callumwong.com_lens_id_fk",
+          "tableFrom": "gallery.callumwong.com_photo",
+          "tableTo": "gallery.callumwong.com_lens",
+          "columnsFrom": [
+            "lensId"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.gallery.callumwong.com_photos_to_tags": {
+      "name": "gallery.callumwong.com_photos_to_tags",
+      "schema": "",
+      "columns": {
+        "photoId": {
+          "name": "photoId",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "tagId": {
+          "name": "tagId",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "gallery.callumwong.com_photos_to_tags_photoId_gallery.callumwong.com_photo_id_fk": {
+          "name": "gallery.callumwong.com_photos_to_tags_photoId_gallery.callumwong.com_photo_id_fk",
+          "tableFrom": "gallery.callumwong.com_photos_to_tags",
+          "tableTo": "gallery.callumwong.com_photo",
+          "columnsFrom": [
+            "photoId"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        },
+        "gallery.callumwong.com_photos_to_tags_tagId_gallery.callumwong.com_tag_id_fk": {
+          "name": "gallery.callumwong.com_photos_to_tags_tagId_gallery.callumwong.com_tag_id_fk",
+          "tableFrom": "gallery.callumwong.com_photos_to_tags",
+          "tableTo": "gallery.callumwong.com_tag",
+          "columnsFrom": [
+            "tagId"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {
+        "gallery.callumwong.com_photos_to_tags_photoId_tagId_pk": {
+          "name": "gallery.callumwong.com_photos_to_tags_photoId_tagId_pk",
+          "columns": [
+            "photoId",
+            "tagId"
+          ]
+        }
+      },
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.gallery.callumwong.com_session": {
+      "name": "gallery.callumwong.com_session",
+      "schema": "",
+      "columns": {
+        "sessionToken": {
+          "name": "sessionToken",
+          "type": "text",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "userId": {
+          "name": "userId",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "expires": {
+          "name": "expires",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true
+        }
+      },
+      "indexes": {
+        "session_userId_idx": {
+          "name": "session_userId_idx",
+          "columns": [
+            {
+              "expression": "userId",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {
+        "gallery.callumwong.com_session_userId_gallery.callumwong.com_user_id_fk": {
+          "name": "gallery.callumwong.com_session_userId_gallery.callumwong.com_user_id_fk",
+          "tableFrom": "gallery.callumwong.com_session",
+          "tableTo": "gallery.callumwong.com_user",
+          "columnsFrom": [
+            "userId"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.gallery.callumwong.com_tag": {
+      "name": "gallery.callumwong.com_tag",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "serial",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "name": {
+          "name": "name",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "createdAt": {
+          "name": "createdAt",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "lastUpdatedAt": {
+          "name": "lastUpdatedAt",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {
+        "gallery.callumwong.com_tag_name_unique": {
+          "name": "gallery.callumwong.com_tag_name_unique",
+          "nullsNotDistinct": false,
+          "columns": [
+            "name"
+          ]
+        }
+      },
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.gallery.callumwong.com_user": {
+      "name": "gallery.callumwong.com_user",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "text",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "name": {
+          "name": "name",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "email": {
+          "name": "email",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "emailVerified": {
+          "name": "emailVerified",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": false,
+          "default": "now()"
+        },
+        "image": {
+          "name": "image",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.gallery.callumwong.com_verification_token": {
+      "name": "gallery.callumwong.com_verification_token",
+      "schema": "",
+      "columns": {
+        "identifier": {
+          "name": "identifier",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "token": {
+          "name": "token",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "expires": {
+          "name": "expires",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {
+        "gallery.callumwong.com_verification_token_identifier_token_pk": {
+          "name": "gallery.callumwong.com_verification_token_identifier_token_pk",
+          "columns": [
+            "identifier",
+            "token"
+          ]
+        }
+      },
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    }
+  },
+  "enums": {},
+  "schemas": {},
+  "sequences": {},
+  "roles": {},
+  "policies": {},
+  "views": {},
+  "_meta": {
+    "columns": {},
+    "schemas": {},
+    "tables": {}
+  }
+}

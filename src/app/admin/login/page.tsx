@@ -3,7 +3,7 @@ import { Card, CardContent } from "~/components/ui/card";
 import { signIn } from "~/server/auth";
 import { providerMap } from "~/server/auth/config";
 
-export default async function LoginPage(props: {
+export default async function AuthLoginPage(props: {
 	searchParams: Promise<{ callbackUrl: string | undefined }>;
 }) {
 	const params = await props.searchParams;

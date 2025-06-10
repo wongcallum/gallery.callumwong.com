@@ -20,7 +20,7 @@ export const env = createEnv({
 		AWS_SECRET_ACCESS_KEY: z.string(),
 		AWS_S3_BUCKET_NAME: z.string(),
 		AWS_S3_REGION: z.string(),
-		ADMIN_EMAIL: z.string().email(),
+		ADMIN_EMAIL: z.string().transform((s) => s.split(",")),
 		NODE_ENV: z
 			.enum(["development", "test", "production"])
 			.default("development"),

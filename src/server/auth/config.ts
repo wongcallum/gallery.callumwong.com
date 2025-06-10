@@ -81,11 +81,13 @@ export const authConfig = {
 			},
 		}),
 		signIn({ profile }) {
-			return profile?.email === env.ADMIN_EMAIL || false;
+			console.log(`Sign in attempt by ${profile?.email}`);
+			return profile?.email ? env.ADMIN_EMAIL.includes(profile?.email) : false;
 		},
 	},
 	pages: {
 		signIn: "/admin/login",
+		error: "/admin/error",
 	},
 	trustHost: true,
 } satisfies NextAuthConfig;

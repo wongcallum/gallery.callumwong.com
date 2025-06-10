@@ -102,8 +102,6 @@ export default function Gallery({ photos }: { photos: PhotosOutput }) {
 								src={slide.src}
 								alt={slide.alt}
 								className="max-h-full xl:max-h-9/10"
-								width={slide.width}
-								height={slide.height}
 							/>
 						);
 					},

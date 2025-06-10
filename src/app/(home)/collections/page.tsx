@@ -25,9 +25,11 @@ export default function Collections() {
 									alt={`Thumbnail for ${collection.name}`}
 								/>
 							</Link>
-							<div className="absolute right-0 bottom-0 left-0 flex items-center justify-between rounded-b-md bg-black/60 p-2 text-white">
-								<span className="font-semibold">{collection.name}</span>
-								<span>{collection.photoCount}</span>
+							<div className="absolute right-0 bottom-0 left-0 flex items-end justify-between rounded-b-md bg-black/60 p-2 text-white">
+								<span className="pr-2 font-semibold">{collection.name}</span>
+								<span title={`${collection.photoCount} photos`}>
+									{collection.photoCount}
+								</span>
 							</div>
 						</div>
 					))}

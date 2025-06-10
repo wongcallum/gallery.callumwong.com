@@ -29,9 +29,13 @@ export default function CollectionPage() {
 			<Link href="/collections">Back</Link>
 
 			<h1 className="font-bold text-2xl">{data.name}</h1>
-			<p className="">{data.description}</p>
+			<p className="mb-6">{data.description}</p>
 
-			<Gallery photos={data.photos || []} />
+			{data.photos.length > 0 ? (
+				<Gallery photos={data.photos} />
+			) : (
+				<p>No photos in collection!</p>
+			)}
 		</>
 	);
 }

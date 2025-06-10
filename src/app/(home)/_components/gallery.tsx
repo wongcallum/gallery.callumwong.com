@@ -1,6 +1,6 @@
 "use client";
 
-import { Aperture, Film, Timer } from "lucide-react";
+import { Aperture, Film, Ruler, Timer } from "lucide-react";
 import { useSession } from "next-auth/react";
 import { useState } from "react";
 import { RowsPhotoAlbum } from "react-photo-album";
@@ -67,6 +67,10 @@ export default function Gallery({ photos }: { photos: PhotosOutput }) {
 							<div className="flex flex-row items-center gap-1">
 								<Aperture />
 								<span>{apertureString(photo.aperture)}</span>
+							</div>
+							<div className="flex flex-row items-center gap-1">
+								<Ruler />
+								<span>{photo.focalLength}mm</span>
 							</div>
 						</div>
 					),

@@ -33,6 +33,39 @@ export const collectionRouter = createTRPCRouter({
 			});
 		}),
 
+	modify: protectedProcedure
+		.input(
+			createCollectionSchema.extend({
+				id: z.number(),
+			}),
+		)
+		.mutation(async ({ ctx, input }) => {
+			await ctx.db
+				.update(collections)
+				.set({
+					name: input.name,
+					description: input.description,
+				})
+				.where(eq(collections.id, input.id));
+		}),
+
+	delete: protectedProcedure
+		.input(
+			z.object({
+				id: z.number(),
+				deletePhotos: z.boolean(),
+			}),
+		)
+		.mutation(async ({ ctx, input }) => {
+			await ctx.db.transaction(async (tx) => {
+				if (input.deletePhotos) {
+					await tx.delete(photos).where(eq(photos.collectionId, input.id));
+				}
+
+				await tx.delete(collections).where(eq(collections.id, input.id));
+			});
+		}),
+
 	all: publicProcedure.query(async ({ ctx }) => {
 		const allCollections = await ctx.db
 			.select({

@@ -227,7 +227,10 @@ export default function ImportPage() {
 							</FormItem>
 						)}
 					/>
-					<Button type="submit" disabled={images.length === 0}>
+					<Button
+						type="submit"
+						disabled={images.length === 0 || mutation.isPending}
+					>
 						Import
 					</Button>
 				</form>

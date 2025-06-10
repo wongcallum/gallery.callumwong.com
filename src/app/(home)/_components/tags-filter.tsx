@@ -5,10 +5,10 @@ import { SidebarGroup, SidebarGroupLabel } from "~/components/ui/sidebar";
 import { api } from "~/trpc/react";
 
 interface TagsFilterProps {
-	camera: string;
-	setCamera: (value: string) => void;
-	lens: string;
-	setLens: (value: string) => void;
+	camera: string | undefined;
+	setCamera: (value: string | undefined) => void;
+	lens: string | undefined;
+	setLens: (value: string | undefined) => void;
 	date: DateRange | undefined;
 	setDate: (value: DateRange | undefined) => void;
 }

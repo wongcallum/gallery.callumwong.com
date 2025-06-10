@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useState } from "react";
 import { Input } from "~/components/ui/input";
+import { SidebarTrigger } from "~/components/ui/sidebar";
 import { api } from "~/trpc/react";
 
 export default function Collections() {
@@ -12,7 +13,10 @@ export default function Collections() {
 
 	return (
 		<>
-			<Input onChange={(val) => setSearch(val.target.value)} />
+			<div className="flex items-center gap-2">
+				<SidebarTrigger className="-ml-1" />
+				<Input onChange={(val) => setSearch(val.target.value)} />
+			</div>
 			<div className="grid grid-flow-row grid-cols-2 gap-4 py-4 lg:grid-cols-3 2xl:grid-cols-4">
 				{collections.data
 					?.filter((c) => c.name.includes(search))

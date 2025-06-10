@@ -13,6 +13,7 @@ import "yet-another-react-lightbox/styles.css";
 import "yet-another-react-lightbox/plugins/captions.css";
 import "react-photo-album/rows.css";
 import Gallery from "~/app/(home)/_components/gallery";
+import { SidebarTrigger } from "~/components/ui/sidebar";
 
 const formSchema = z.object({
 	search: z.array(z.coerce.number()),
@@ -56,7 +57,11 @@ export default function Tags() {
 	return (
 		<>
 			<Form {...form}>
-				<form onSubmit={form.handleSubmit(onSubmit)} className="flex gap-4">
+				<form
+					onSubmit={form.handleSubmit(onSubmit)}
+					className="flex items-center gap-2"
+				>
+					<SidebarTrigger className="-ml-1" />
 					<FormField
 						control={form.control}
 						name="search"

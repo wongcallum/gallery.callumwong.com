@@ -96,7 +96,7 @@ export const photoRouter = createTRPCRouter({
 			const thumbnailKey = `${id}-thumb`;
 
 			// process images
-			const optimised = await sharp(image)
+			const optimised = sharp(image)
 				.rotate()
 				.resize({
 					width: 2160,

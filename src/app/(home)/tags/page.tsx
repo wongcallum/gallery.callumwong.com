@@ -87,7 +87,7 @@ export default function Tags() {
 				<Form {...form}>
 					<form
 						onSubmit={form.handleSubmit(onSubmit)}
-						className="flex items-center gap-2"
+						className="mb-4 flex items-center gap-2"
 					>
 						<SidebarTrigger className="-ml-1" />
 						<FormField
@@ -135,9 +135,7 @@ export default function Tags() {
 						})}
 					/>
 				) : (
-					<>
-						<Skeleton className="h-[125px] w-[250px] rounded-xl" />
-					</>
+					<Skeleton className="aspect-3/2 h-[200px] rounded-xl" />
 				)}
 			</div>
 		</>

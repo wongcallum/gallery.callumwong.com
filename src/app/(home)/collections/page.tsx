@@ -13,7 +13,7 @@ export default function Collections() {
 	return (
 		<>
 			<Input onChange={(val) => setSearch(val.target.value)} />
-			<div className="columns-2 gap-4 py-4 sm:columns-3 sm:gap-8">
+			<div className="grid grid-flow-row grid-cols-2 gap-4 py-4 lg:grid-cols-3 2xl:grid-cols-4">
 				{collections.data
 					?.filter((c) => c.name.includes(search))
 					.map((collection) => (

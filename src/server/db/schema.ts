@@ -21,6 +21,12 @@ export const collections = createTable("collection", (d) => ({
 	name: d.text().notNull(),
 	description: d.text().default("").notNull(),
 	thumbnailPhotoURL: d.text(),
+	createdAt: d.timestamp().defaultNow().notNull(),
+	lastUpdatedAt: d
+		.timestamp()
+		.defaultNow()
+		.$onUpdate(() => new Date())
+		.notNull(),
 }));
 
 export const collectionsRelations = relations(collections, ({ one, many }) => ({
@@ -44,6 +50,12 @@ export const photos = createTable(
 			.text()
 			.notNull()
 			.references(() => users.id),
+		createdAt: d.timestamp().defaultNow().notNull(),
+		lastUpdatedAt: d
+			.timestamp()
+			.defaultNow()
+			.$onUpdate(() => new Date())
+			.notNull(),
 		takenAt: d.timestamp(),
 		aperture: d.real(),
 		shutterSpeed: d.real(),
@@ -53,6 +65,8 @@ export const photos = createTable(
 		lensId: d.integer().references(() => lenses.id),
 		title: d.text(),
 		url: d.text().notNull(),
+		width: d.integer().notNull(),
+		height: d.integer().notNull(),
 		thumbnailUrl: d.text().notNull(),
 		thumbnailWidth: d.integer().notNull(),
 		thumbnailHeight: d.integer().notNull(),
@@ -81,8 +95,8 @@ export const photosRelations = relations(photos, ({ one, many }) => ({
 
 export const cameras = createTable("camera", (d) => ({
 	id: d.serial().primaryKey(),
-	serial: d.integer().unique().notNull(),
-	name: d.text().notNull(),
+	// serial: d.integer().unique().notNull(),
+	name: d.text().notNull().unique(),
 }));
 
 export const lenses = createTable("lens", (d) => ({
@@ -94,6 +108,12 @@ export const lenses = createTable("lens", (d) => ({
 export const tags = createTable("tag", (d) => ({
 	id: d.serial().primaryKey(),
 	name: d.text().unique().notNull(),
+	createdAt: d.timestamp().defaultNow().notNull(),
+	lastUpdatedAt: d
+		.timestamp()
+		.defaultNow()
+		.$onUpdate(() => new Date())
+		.notNull(),
 }));
 
 export const tagsRelations = relations(tags, ({ many }) => ({

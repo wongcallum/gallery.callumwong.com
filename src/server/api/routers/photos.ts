@@ -47,14 +47,12 @@ async function insertOrSelectLens(
 }
 
 async function insertOrSelectCamera(
-	serial: number,
 	model: string,
 ): Promise<typeof cameras.$inferInsert | undefined> {
-	if (!serial) return;
+	if (!model) return;
 	const insertedCamera = await db
 		.insert(cameras)
 		.values({
-			serial,
 			name: model,
 		})
 		.onConflictDoNothing()
@@ -65,7 +63,7 @@ async function insertOrSelectCamera(
 	}
 
 	return await db.query.cameras.findFirst({
-		where: (cameras, { eq }) => eq(cameras.serial, serial),
+		where: (cameras, { eq }) => eq(cameras.name, model),
 	});
 }
 
@@ -109,13 +107,15 @@ export const photoRouter = createTRPCRouter({
 				.toFormat("jpeg", {
 					quality: 80,
 					mozjpeg: true,
-				})
-				.toBuffer();
+				});
 
-			const thumbnail = sharp(optimised)
+			const { width, height } = await optimised.metadata();
+			const optimisedBuffer = await optimised.toBuffer();
+
+			const thumbnail = sharp(optimisedBuffer)
 				.resize({
-					width: 720,
-					height: 720,
+					width: 1080,
+					height: 1080,
 					fit: "inside",
 				})
 				.toFormat("webp", {
@@ -125,6 +125,7 @@ export const photoRouter = createTRPCRouter({
 
 			const { width: thumbnailWidth, height: thumbnailHeight } =
 				await thumbnail.metadata();
+			const thumbnailBuffer = await thumbnail.toBuffer();
 
 			// add images to db
 			const newPhoto: typeof photos.$inferInsert = {
@@ -133,6 +134,8 @@ export const photoRouter = createTRPCRouter({
 				collectionId: collection?.id,
 				takenAt: new Date(input.image.lastModified),
 				url: `https://s3.${env.AWS_S3_REGION}.amazonaws.com/${env.AWS_S3_BUCKET_NAME}/${id}`,
+				width,
+				height,
 				thumbnailUrl: `https://s3.${env.AWS_S3_REGION}.amazonaws.com/${env.AWS_S3_BUCKET_NAME}/${thumbnailKey}`,
 				thumbnailWidth,
 				thumbnailHeight,
@@ -143,7 +146,6 @@ export const photoRouter = createTRPCRouter({
 					"DateTimeOriginal",
 					"FNumber",
 					"ExposureTime",
-					"SerialNumber",
 					"Model",
 					"LensModel",
 					"ISO",
@@ -152,10 +154,7 @@ export const photoRouter = createTRPCRouter({
 			});
 
 			if (exif) {
-				const camera = await insertOrSelectCamera(
-					exif.SerialNumber,
-					exif.Model,
-				);
+				const camera = await insertOrSelectCamera(exif.Model);
 				const lens = await insertOrSelectLens(exif.LensModel);
 
 				if (exif.DateTimeOriginal) newPhoto.takenAt = exif.DateTimeOriginal;
@@ -186,14 +185,14 @@ export const photoRouter = createTRPCRouter({
 					new PutObjectCommand({
 						Bucket: env.AWS_S3_BUCKET_NAME,
 						Key: id,
-						Body: optimised,
+						Body: optimisedBuffer,
 					}),
 				);
 				await s3Client.send(
 					new PutObjectCommand({
 						Bucket: env.AWS_S3_BUCKET_NAME,
 						Key: thumbnailKey,
-						Body: await thumbnail.toBuffer(),
+						Body: thumbnailBuffer,
 					}),
 				);
 			} catch (caught) {

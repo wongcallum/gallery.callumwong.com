@@ -52,6 +52,8 @@ export default function Gallery({ photos }: { photos: PhotosOutput }) {
 				slides={photos.map((photo) => ({
 					src: photo.url,
 					title: photo.title,
+					width: photo.width,
+					height: photo.height,
 					description: (
 						<div className="flex justify-center gap-12 md:gap-24">
 							<div className="flex flex-row items-center gap-1">

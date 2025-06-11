@@ -60,6 +60,13 @@ export const collectionRouter = createTRPCRouter({
 			await ctx.db.transaction(async (tx) => {
 				if (input.deletePhotos) {
 					await tx.delete(photos).where(eq(photos.collectionId, input.id));
+				} else {
+					await tx
+						.update(photos)
+						.set({
+							collectionId: null,
+						})
+						.where(eq(photos.collectionId, input.id));
 				}
 
 				await tx.delete(collections).where(eq(collections.id, input.id));

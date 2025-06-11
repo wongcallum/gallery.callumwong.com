@@ -21,7 +21,7 @@ import { Input } from "~/components/ui/input";
 import { createCollectionSchema } from "~/lib/schemas";
 import { api } from "~/trpc/react";
 
-interface EditCollectionFormProps {
+interface EditCollectionDialogProps {
 	create: boolean;
 	id?: number;
 	name?: string;
@@ -37,7 +37,7 @@ export function EditCollectionDialog({
 	description,
 	open,
 	setOpen,
-}: EditCollectionFormProps) {
+}: EditCollectionDialogProps) {
 	const utils = api.useUtils();
 	const createMutation = api.collections.create.useMutation();
 	const modifyMutation = api.collections.modify.useMutation();

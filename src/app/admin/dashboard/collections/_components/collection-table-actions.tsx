@@ -8,12 +8,14 @@ import {
 	DropdownMenuTrigger,
 } from "~/components/ui/dropdown-menu";
 import type { Collection } from "../columns";
+import { DeleteCollectionDialog } from "./delete-collection-dialog";
 import { EditCollectionDialog } from "./edit-collection-dialog";
 
 export function CollectionTableActions({
 	collection,
 }: { collection: Collection }) {
 	const [editOpen, setEditOpen] = useState(false);
+	const [deleteOpen, setDeleteOpen] = useState(false);
 
 	return (
 		<div className="text-right">
@@ -26,14 +28,12 @@ export function CollectionTableActions({
 				</DropdownMenuTrigger>
 				<DropdownMenuContent align="end">
 					<DropdownMenuItem>Modify images</DropdownMenuItem>
-					<DropdownMenuItem
-						onClick={() => {
-							setEditOpen(true);
-						}}
-					>
+					<DropdownMenuItem onClick={() => setEditOpen(true)}>
 						Edit metadata
 					</DropdownMenuItem>
-					<DropdownMenuItem>Delete</DropdownMenuItem>
+					<DropdownMenuItem onClick={() => setDeleteOpen(true)}>
+						Delete
+					</DropdownMenuItem>
 				</DropdownMenuContent>
 			</DropdownMenu>
 			<EditCollectionDialog
@@ -43,6 +43,12 @@ export function CollectionTableActions({
 				description={collection.description}
 				open={editOpen}
 				setOpen={setEditOpen}
+			/>
+			<DeleteCollectionDialog
+				id={collection.id}
+				name={collection.name}
+				open={deleteOpen}
+				setOpen={setDeleteOpen}
 			/>
 		</div>
 	);

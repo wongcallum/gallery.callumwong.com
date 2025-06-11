@@ -4,7 +4,7 @@ import { useState } from "react";
 import { DataTable } from "~/components/data-table";
 import { Button } from "~/components/ui/button";
 import { api } from "~/trpc/react";
-import { EditCollectionDialog } from "./_components/edit-collection-dialog";
+import { CreateCollectionDialog } from "./_components/collection-dialog";
 import { columns } from "./columns";
 
 export default function CollectionsPage() {
@@ -20,7 +20,7 @@ export default function CollectionsPage() {
 			data={collections.data || []}
 		>
 			<Button onClick={() => setOpen(true)}>New collection</Button>
-			<EditCollectionDialog create={true} open={open} setOpen={setOpen} />
+			<CreateCollectionDialog open={open} setOpen={setOpen} />
 		</DataTable>
 	);
 }

@@ -1,5 +1,5 @@
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useForm } from "react-hook-form";
+import { type UseFormReturn, useForm } from "react-hook-form";
 import type z from "zod";
 import { Button } from "~/components/ui/button";
 import {
@@ -21,17 +21,59 @@ import { Input } from "~/components/ui/input";
 import { createCollectionSchema } from "~/lib/schemas";
 import { api } from "~/trpc/react";
 
+type CollectionFormData = z.infer<typeof createCollectionSchema>;
+
+interface CreateCollectionDialogProps {
+	open: boolean;
+	setOpen: (value: boolean) => void;
+}
+
+export function CreateCollectionDialog({
+	open,
+	setOpen,
+}: CreateCollectionDialogProps) {
+	const utils = api.useUtils();
+	const createMutation = api.collections.create.useMutation();
+
+	const form = useForm<z.infer<typeof createCollectionSchema>>({
+		resolver: zodResolver(createCollectionSchema),
+		defaultValues: {
+			name: "",
+			description: "",
+		},
+	});
+
+	async function onSubmit(values: z.infer<typeof createCollectionSchema>) {
+		createMutation.mutateAsync(values, {
+			async onSuccess() {
+				await utils.collections.invalidate();
+				setOpen(false);
+				form.reset();
+			},
+		});
+	}
+
+	return (
+		<CollectionDialog
+			open={open}
+			setOpen={setOpen}
+			title="Create collection"
+			form={form}
+			onSubmit={onSubmit}
+			isPending={createMutation.isPending}
+		/>
+	);
+}
+
 interface EditCollectionDialogProps {
-	create: boolean;
-	id?: number;
-	name?: string;
-	description?: string;
+	id: number;
+	name: string;
+	description: string;
 	open: boolean;
 	setOpen: (value: boolean) => void;
 }
 
 export function EditCollectionDialog({
-	create,
 	id,
 	name,
 	description,
@@ -39,31 +81,14 @@ export function EditCollectionDialog({
 	setOpen,
 }: EditCollectionDialogProps) {
 	const utils = api.useUtils();
-	const createMutation = api.collections.create.useMutation();
 	const modifyMutation = api.collections.modify.useMutation();
 
 	const form = useForm<z.infer<typeof createCollectionSchema>>({
 		resolver: zodResolver(createCollectionSchema),
-		values: {
-			name: name || "",
-			description: description || "",
-		},
+		values: { name, description },
 	});
 
 	async function onSubmit(values: z.infer<typeof createCollectionSchema>) {
-		if (create) {
-			createMutation.mutateAsync(values, {
-				async onSuccess() {
-					await utils.collections.invalidate();
-					setOpen(false);
-					form.reset();
-				},
-			});
-
-			return;
-		}
-
-		if (!id) return;
 		modifyMutation.mutateAsync(
 			{
 				id,
@@ -81,10 +106,39 @@ export function EditCollectionDialog({
 	}
 
 	return (
+		<CollectionDialog
+			open={open}
+			setOpen={setOpen}
+			title="Edit collection"
+			form={form}
+			onSubmit={onSubmit}
+			isPending={modifyMutation.isPending}
+		/>
+	);
+}
+
+interface Props {
+	open: boolean;
+	setOpen: (value: boolean) => void;
+	title: string;
+	form: UseFormReturn<CollectionFormData>;
+	onSubmit: (values: CollectionFormData) => Promise<void>;
+	isPending: boolean;
+}
+
+function CollectionDialog({
+	open,
+	setOpen,
+	title,
+	form,
+	onSubmit,
+	isPending,
+}: Props) {
+	return (
 		<Dialog open={open} onOpenChange={setOpen}>
 			<DialogContent>
 				<DialogHeader>
-					<DialogTitle>{create ? "Create" : "Edit"} collection</DialogTitle>
+					<DialogTitle>{title}</DialogTitle>
 				</DialogHeader>
 				<Form {...form}>
 					<form onSubmit={form.handleSubmit(onSubmit)} className="space-y-2">
@@ -115,10 +169,7 @@ export function EditCollectionDialog({
 							)}
 						/>
 						<DialogFooter>
-							<Button
-								type="submit"
-								disabled={createMutation.isPending || modifyMutation.isPending}
-							>
+							<Button type="submit" disabled={isPending}>
 								Save changes
 							</Button>
 						</DialogFooter>

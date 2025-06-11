@@ -8,8 +8,8 @@ import {
 	DropdownMenuTrigger,
 } from "~/components/ui/dropdown-menu";
 import type { Collection } from "../columns";
+import { EditCollectionDialog } from "./collection-dialog";
 import { DeleteCollectionDialog } from "./delete-collection-dialog";
-import { EditCollectionDialog } from "./edit-collection-dialog";
 
 export function CollectionTableActions({
 	collection,
@@ -37,7 +37,6 @@ export function CollectionTableActions({
 				</DropdownMenuContent>
 			</DropdownMenu>
 			<EditCollectionDialog
-				create={false}
 				id={collection.id}
 				name={collection.name}
 				description={collection.description}

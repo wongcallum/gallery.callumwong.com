@@ -9,6 +9,7 @@ export type Collection = {
 	name: string;
 	description: string;
 	photoCount: number;
+	priority: number;
 };
 
 export const columns: CollectionColumnDef<Collection>[] = [
@@ -26,6 +27,12 @@ export const columns: CollectionColumnDef<Collection>[] = [
 		accessorKey: "photoCount",
 		header: ({ column }) => (
 			<DataTableColumnHeader column={column} title="Photos" />
+		),
+	},
+	{
+		accessorKey: "priority",
+		header: ({ column }) => (
+			<DataTableColumnHeader column={column} title="Priority" />
 		),
 	},
 	{

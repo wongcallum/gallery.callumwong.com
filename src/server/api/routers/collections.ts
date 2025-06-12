@@ -30,6 +30,7 @@ export const collectionRouter = createTRPCRouter({
 			await ctx.db.insert(collections).values({
 				name: input.name,
 				description: input.description,
+				priority: input.priority,
 				createdById: ctx.session.user.id,
 			});
 		}),
@@ -46,6 +47,7 @@ export const collectionRouter = createTRPCRouter({
 				.set({
 					name: input.name,
 					description: input.description,
+					priority: input.priority,
 				})
 				.where(eq(collections.id, input.id));
 		}),
@@ -90,7 +92,7 @@ export const collectionRouter = createTRPCRouter({
 			.from(collections)
 			.leftJoin(photos, eq(collections.id, photos.collectionId))
 			.groupBy(collections.id)
-			.orderBy(collections.name);
+			.orderBy(desc(collections.priority));
 
 		for (const collection of allCollections) {
 			if (!collection.thumbnailPhotoURL) {

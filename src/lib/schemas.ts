@@ -10,6 +10,7 @@ export const importPhotoSchema = z.object({
 export const createCollectionSchema = z.object({
 	name: z.string().min(1),
 	description: z.string().optional(),
+	priority: z.coerce.number(),
 });
 
 export const createTagSchema = z.object({

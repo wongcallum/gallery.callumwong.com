@@ -27,6 +27,7 @@ export const collections = createTable("collection", (d) => ({
 		.defaultNow()
 		.$onUpdate(() => new Date())
 		.notNull(),
+	priority: d.integer().default(0).notNull(),
 }));
 
 export const collectionsRelations = relations(collections, ({ one, many }) => ({

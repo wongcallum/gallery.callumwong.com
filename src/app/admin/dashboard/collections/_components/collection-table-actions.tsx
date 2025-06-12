@@ -40,6 +40,7 @@ export function CollectionTableActions({
 				id={collection.id}
 				name={collection.name}
 				description={collection.description}
+				priority={collection.priority}
 				open={editOpen}
 				setOpen={setEditOpen}
 			/>

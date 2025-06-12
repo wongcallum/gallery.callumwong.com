@@ -40,6 +40,7 @@ export function CreateCollectionDialog({
 		defaultValues: {
 			name: "",
 			description: "",
+			priority: 0,
 		},
 	});
 
@@ -69,6 +70,7 @@ interface EditCollectionDialogProps {
 	id: number;
 	name: string;
 	description: string;
+	priority: number;
 	open: boolean;
 	setOpen: (value: boolean) => void;
 }
@@ -77,6 +79,7 @@ export function EditCollectionDialog({
 	id,
 	name,
 	description,
+	priority,
 	open,
 	setOpen,
 }: EditCollectionDialogProps) {
@@ -85,7 +88,7 @@ export function EditCollectionDialog({
 
 	const form = useForm<CollectionFormData>({
 		resolver: zodResolver(createCollectionSchema),
-		values: { name, description },
+		values: { name, description, priority },
 	});
 
 	async function onSubmit(values: CollectionFormData) {
@@ -94,6 +97,7 @@ export function EditCollectionDialog({
 				id,
 				name: values.name,
 				description: values.description,
+				priority: values.priority,
 			},
 			{
 				async onSuccess() {
@@ -163,6 +167,19 @@ function CollectionDialog({
 									<FormLabel>Description</FormLabel>
 									<FormControl>
 										<Input className="col-span-3" {...field} />
+									</FormControl>
+									<FormMessage />
+								</FormItem>
+							)}
+						/>
+						<FormField
+							control={form.control}
+							name="priority"
+							render={({ field }) => (
+								<FormItem className="grid grid-cols-4 items-center gap-4">
+									<FormLabel>Priority</FormLabel>
+									<FormControl>
+										<Input type="number" className="col-span-3" {...field} />
 									</FormControl>
 									<FormMessage />
 								</FormItem>

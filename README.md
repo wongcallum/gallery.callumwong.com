@@ -12,3 +12,4 @@
 - whitelisting users, creating users, etc
 - sorting in both views
 - move some settings from env to database
+- maybe edit order of collections or group collections

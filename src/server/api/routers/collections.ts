@@ -1,6 +1,7 @@
 import { TRPCError } from "@trpc/server";
 import { count, desc, eq, getTableColumns } from "drizzle-orm";
 import { z } from "zod";
+import { deletePhoto } from "~/lib/s3";
 import { createCollectionSchema } from "~/lib/schemas";
 
 import {
@@ -59,7 +60,14 @@ export const collectionRouter = createTRPCRouter({
 		.mutation(async ({ ctx, input }) => {
 			await ctx.db.transaction(async (tx) => {
 				if (input.deletePhotos) {
-					await tx.delete(photos).where(eq(photos.collectionId, input.id));
+					const deleted = await tx
+						.delete(photos)
+						.where(eq(photos.collectionId, input.id))
+						.returning();
+
+					for (const photo of deleted) {
+						await deletePhoto(photo.id);
+					}
 				} else {
 					await tx
 						.update(photos)

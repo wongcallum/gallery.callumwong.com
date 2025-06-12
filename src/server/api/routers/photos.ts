@@ -1,15 +1,11 @@
-import {
-	DeleteObjectCommand,
-	PutObjectCommand,
-	S3ServiceException,
-} from "@aws-sdk/client-s3";
+import { PutObjectCommand, S3ServiceException } from "@aws-sdk/client-s3";
 import { TRPCError } from "@trpc/server";
 import { desc, eq, getTableColumns, inArray, sql } from "drizzle-orm";
 import exifr from "exifr";
 import sharp from "sharp";
 import { z } from "zod";
 import { env } from "~/env";
-import s3Client from "~/lib/s3";
+import s3Client, { deletePhoto } from "~/lib/s3";
 import { editPhotoSchema, importPhotoSchema } from "~/lib/schemas";
 import {
 	createTRPCRouter,
@@ -273,33 +269,14 @@ export const photoRouter = createTRPCRouter({
 	delete: protectedProcedure
 		.input(z.string())
 		.mutation(async ({ ctx, input }) => {
-			const thumbnailKey = `${input}-thumb`;
+			const deleted = await ctx.db
+				.delete(photos)
+				.where(eq(photos.id, input))
+				.returning();
 
-			try {
-				await s3Client.send(
-					new DeleteObjectCommand({
-						Bucket: env.AWS_S3_BUCKET_NAME,
-						Key: input,
-					}),
-				);
-				await s3Client.send(
-					new DeleteObjectCommand({
-						Bucket: env.AWS_S3_BUCKET_NAME,
-						Key: thumbnailKey,
-					}),
-				);
-			} catch (caught) {
-				if (caught instanceof Error) {
-					throw new TRPCError({
-						code: "INTERNAL_SERVER_ERROR",
-						message: caught.message,
-					});
-				}
-
-				throw caught;
+			if (deleted[0]) {
+				await deletePhoto(deleted[0].id);
 			}
-
-			await ctx.db.delete(photos).where(eq(photos.id, input));
 		}),
 
 	edit: protectedProcedure

@@ -2,6 +2,7 @@ import { SessionProvider } from "next-auth/react";
 import Link from "next/link";
 import type React from "react";
 import { SidebarProvider } from "~/components/ui/sidebar";
+import { env } from "~/env";
 
 export default function HomeLayout({
 	children,
@@ -18,9 +19,9 @@ export default function HomeLayout({
 					Back to callumwong.com
 				</Link>
 				<span>© {new Date().getFullYear()} Callum Wong</span>
-				<span className="text-red-600">
-					WORK IN PROGRESS, THINGS WILL BREAK
-				</span>
+				{env.NODE_ENV !== "production" && (
+					<span className="text-red-600">DEVELOPMENT BUILD</span>
+				)}
 			</footer>
 		</div>
 	);

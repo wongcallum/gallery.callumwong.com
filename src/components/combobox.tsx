@@ -70,7 +70,7 @@ export function Combobox({
 				<Command>
 					<CommandInput placeholder="Search..." />
 					<CommandList>
-						<CommandEmpty>Nothing to be seen here...</CommandEmpty>
+						<CommandEmpty>No options</CommandEmpty>
 						<CommandGroup>
 							{options.map((option) => (
 								<CommandItem

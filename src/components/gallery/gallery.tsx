@@ -8,9 +8,9 @@ import { Lightbox } from "yet-another-react-lightbox";
 import Captions from "yet-another-react-lightbox/plugins/captions";
 import Fullscreen from "yet-another-react-lightbox/plugins/fullscreen";
 import Zoom from "yet-another-react-lightbox/plugins/zoom";
-import { AdminPlugin } from "~/components/gallery/lightbox-admin-plugin";
 import { apertureString, shutterSpeedString } from "~/lib/utils";
 import type { RouterOutputs } from "~/trpc/react";
+import { AdminPlugin } from "./lightbox-admin-plugin";
 
 type PhotosOutput = RouterOutputs["photos"]["search"];
 
@@ -35,7 +35,8 @@ export default function Gallery({ photos }: { photos: PhotosOutput }) {
 						title: photo.title || "",
 					})) || []
 				}
-				targetRowHeight={200}
+				targetRowHeight={300}
+				rowConstraints={{ singleRowMaxHeight: 300 }}
 				onClick={({ index }) => setIndex(index)}
 				render={{
 					container: ({ ref, ...rest }) => (

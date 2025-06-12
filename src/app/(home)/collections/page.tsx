@@ -18,7 +18,7 @@ export default function Collections() {
 				<SidebarTrigger className="-ml-1" />
 				<Input onChange={(val) => setSearch(val.target.value)} />
 			</div>
-			<div className="grid grid-flow-row grid-cols-2 gap-4 py-4 lg:grid-cols-3 2xl:grid-cols-4">
+			<div className="grid grid-flow-row grid-cols-1 gap-4 py-4 lg:grid-cols-2 2xl:grid-cols-3">
 				{collections.data ? (
 					collections.data
 						.filter((c) => c.name.includes(search))

@@ -1,12 +1,23 @@
+"use client";
+
 import { SessionProvider } from "next-auth/react";
 import Link from "next/link";
+import { useSelectedLayoutSegment } from "next/navigation";
 import type React from "react";
+import { useEffect } from "react";
 import { SidebarProvider } from "~/components/ui/sidebar";
-import { env } from "~/env";
 
 export default function HomeLayout({
 	children,
 }: Readonly<{ children: React.ReactNode }>) {
+	const segment = useSelectedLayoutSegment();
+
+	useEffect(() => {
+		if (typeof window !== "undefined" && segment) {
+			localStorage.setItem("lastPage", segment);
+		}
+	}, [segment]);
+
 	return (
 		<div className="flex-col">
 			<SessionProvider>
@@ -19,7 +30,7 @@ export default function HomeLayout({
 					Back to callumwong.com
 				</Link>
 				<span>© {new Date().getFullYear()} Callum Wong</span>
-				{env.NODE_ENV !== "production" && (
+				{process.env.NODE_ENV !== "production" && (
 					<span className="text-red-600">DEVELOPMENT BUILD</span>
 				)}
 			</footer>

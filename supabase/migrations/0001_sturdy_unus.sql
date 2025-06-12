@@ -1,0 +1,1 @@
+ALTER TABLE "gallery.callumwong.com_collection" ADD COLUMN "priority" integer DEFAULT 0 NOT NULL;

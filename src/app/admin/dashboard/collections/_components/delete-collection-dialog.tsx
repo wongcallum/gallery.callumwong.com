@@ -21,6 +21,10 @@ import {
 } from "~/components/ui/form";
 import { api } from "~/trpc/react";
 
+const deleteCollectionFormSchema = z.object({
+	deletePhotos: z.boolean(),
+});
+
 interface DeleteCollectionDialogProps {
 	id: number;
 	name: string;
@@ -28,11 +32,6 @@ interface DeleteCollectionDialogProps {
 	setOpen: (value: boolean) => void;
 }
 
-const formSchema = z.object({
-	deletePhotos: z.boolean(),
-});
-
-// TODO: make this generic (or at least part of it)
 export function DeleteCollectionDialog({
 	id,
 	name,
@@ -42,28 +41,31 @@ export function DeleteCollectionDialog({
 	const utils = api.useUtils();
 	const deleteMutation = api.collections.delete.useMutation();
 
-	const form = useForm<z.infer<typeof formSchema>>({
-		resolver: zodResolver(formSchema),
+	const form = useForm<z.infer<typeof deleteCollectionFormSchema>>({
+		resolver: zodResolver(deleteCollectionFormSchema),
 		defaultValues: {
 			deletePhotos: false,
 		},
 	});
 
-	async function onSubmit(values: z.infer<typeof formSchema>) {
-		deleteMutation.mutateAsync(
-			{
-				id,
-				deletePhotos: values.deletePhotos,
-			},
+	const onDelete = async (deletePhotos: boolean) => {
+		await deleteMutation.mutateAsync(
+			{ id, deletePhotos },
 			{
 				async onSuccess() {
 					await utils.collections.invalidate();
 					setOpen(false);
-					form.reset();
 				},
 			},
 		);
-	}
+	};
+
+	const onSubmit = async (
+		values: z.infer<typeof deleteCollectionFormSchema>,
+	) => {
+		await onDelete(values.deletePhotos);
+		form.reset();
+	};
 
 	return (
 		<Dialog open={open} onOpenChange={setOpen}>
@@ -71,9 +73,11 @@ export function DeleteCollectionDialog({
 				<DialogHeader>
 					<DialogTitle>Delete collection</DialogTitle>
 					<DialogDescription>
-						Are you sure you want to delete collection {name}?
+						Are you sure you want to delete collection{" "}
+						<b className="font-bold">{name}</b>?
 					</DialogDescription>
 				</DialogHeader>
+
 				<Form {...form}>
 					<form onSubmit={form.handleSubmit(onSubmit)} className="space-y-2">
 						<FormField
@@ -87,11 +91,12 @@ export function DeleteCollectionDialog({
 											onCheckedChange={field.onChange}
 										/>
 									</FormControl>
-									<FormLabel>Delete photos in collection</FormLabel>
+									<FormLabel>Delete associated photos</FormLabel>
 									<FormMessage />
 								</FormItem>
 							)}
 						/>
+
 						<DialogFooter>
 							<Button type="submit" disabled={deleteMutation.isPending}>
 								Confirm

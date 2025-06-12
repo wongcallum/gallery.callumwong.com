@@ -4,7 +4,7 @@ import { useState } from "react";
 import { DataTable } from "~/components/data-table";
 import { Button } from "~/components/ui/button";
 import { api } from "~/trpc/react";
-import { CreateCollectionDialog } from "./_components/collection-dialog";
+import { CreateCollectionDialog } from "./_components/create-edit-collection-dialog";
 import { columns } from "./columns";
 
 export default function CollectionsPage() {

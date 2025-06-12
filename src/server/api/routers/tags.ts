@@ -18,6 +18,29 @@ export const tagsRouter = createTRPCRouter({
 			});
 		}),
 
+	modify: protectedProcedure
+		.input(
+			createTagSchema.extend({
+				id: z.number(),
+			}),
+		)
+		.mutation(async ({ ctx, input }) => {
+			await ctx.db
+				.update(tags)
+				.set({
+					name: input.name,
+				})
+				.where(eq(tags.id, input.id));
+		}),
+
+	delete: protectedProcedure
+		.input(z.number())
+		.mutation(async ({ ctx, input }) => {
+			await ctx.db.transaction(async (tx) => {
+				await tx.delete(tags).where(eq(tags.id, input));
+			});
+		}),
+
 	all: publicProcedure.query(async ({ ctx }) => {
 		return await ctx.db.query.tags.findMany();
 	}),

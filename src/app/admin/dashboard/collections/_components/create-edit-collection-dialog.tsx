@@ -35,7 +35,7 @@ export function CreateCollectionDialog({
 	const utils = api.useUtils();
 	const createMutation = api.collections.create.useMutation();
 
-	const form = useForm<z.infer<typeof createCollectionSchema>>({
+	const form = useForm<CollectionFormData>({
 		resolver: zodResolver(createCollectionSchema),
 		defaultValues: {
 			name: "",
@@ -43,7 +43,7 @@ export function CreateCollectionDialog({
 		},
 	});
 
-	async function onSubmit(values: z.infer<typeof createCollectionSchema>) {
+	async function onSubmit(values: CollectionFormData) {
 		createMutation.mutateAsync(values, {
 			async onSuccess() {
 				await utils.collections.invalidate();
@@ -83,12 +83,12 @@ export function EditCollectionDialog({
 	const utils = api.useUtils();
 	const modifyMutation = api.collections.modify.useMutation();
 
-	const form = useForm<z.infer<typeof createCollectionSchema>>({
+	const form = useForm<CollectionFormData>({
 		resolver: zodResolver(createCollectionSchema),
 		values: { name, description },
 	});
 
-	async function onSubmit(values: z.infer<typeof createCollectionSchema>) {
+	async function onSubmit(values: CollectionFormData) {
 		modifyMutation.mutateAsync(
 			{
 				id,
@@ -117,7 +117,7 @@ export function EditCollectionDialog({
 	);
 }
 
-interface Props {
+interface CollectionDialogProps {
 	open: boolean;
 	setOpen: (value: boolean) => void;
 	title: string;
@@ -133,7 +133,7 @@ function CollectionDialog({
 	form,
 	onSubmit,
 	isPending,
-}: Props) {
+}: CollectionDialogProps) {
 	return (
 		<Dialog open={open} onOpenChange={setOpen}>
 			<DialogContent>

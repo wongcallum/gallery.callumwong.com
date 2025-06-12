@@ -14,7 +14,7 @@ import "yet-another-react-lightbox/plugins/captions.css";
 import "react-photo-album/rows.css";
 import { useState } from "react";
 import type { DateRange } from "react-day-picker";
-import Gallery from "~/app/(home)/_components/gallery";
+import Gallery from "~/components/gallery/gallery";
 import {
 	Sidebar,
 	SidebarContent,

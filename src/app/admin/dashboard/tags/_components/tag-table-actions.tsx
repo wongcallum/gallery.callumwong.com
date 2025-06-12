@@ -7,13 +7,11 @@ import {
 	DropdownMenuItem,
 	DropdownMenuTrigger,
 } from "~/components/ui/dropdown-menu";
-import type { Collection } from "../columns";
-import { EditCollectionDialog } from "./create-edit-collection-dialog";
-import { DeleteCollectionDialog } from "./delete-collection-dialog";
+import type { Tag } from "../columns";
+import { EditTagDialog } from "./create-edit-tag-dialog";
+import { DeleteTagDialog } from "./delete-tag-dialog";
 
-export function CollectionTableActions({
-	collection,
-}: { collection: Collection }) {
+export function TagTableActions({ tag }: { tag: Tag }) {
 	const [editOpen, setEditOpen] = useState(false);
 	const [deleteOpen, setDeleteOpen] = useState(false);
 
@@ -27,25 +25,23 @@ export function CollectionTableActions({
 					</Button>
 				</DropdownMenuTrigger>
 				<DropdownMenuContent align="end">
-					{/* <DropdownMenuItem>Modify images</DropdownMenuItem> */}
 					<DropdownMenuItem onClick={() => setEditOpen(true)}>
-						Edit metadata
+						Rename
 					</DropdownMenuItem>
 					<DropdownMenuItem onClick={() => setDeleteOpen(true)}>
 						Delete
 					</DropdownMenuItem>
 				</DropdownMenuContent>
 			</DropdownMenu>
-			<EditCollectionDialog
-				id={collection.id}
-				name={collection.name}
-				description={collection.description}
+			<EditTagDialog
+				id={tag.id}
+				name={tag.name}
 				open={editOpen}
 				setOpen={setEditOpen}
 			/>
-			<DeleteCollectionDialog
-				id={collection.id}
-				name={collection.name}
+			<DeleteTagDialog
+				id={tag.id}
+				name={tag.name}
 				open={deleteOpen}
 				setOpen={setDeleteOpen}
 			/>

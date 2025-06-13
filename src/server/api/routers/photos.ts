@@ -1,6 +1,16 @@
 import { PutObjectCommand, S3ServiceException } from "@aws-sdk/client-s3";
 import { TRPCError } from "@trpc/server";
-import { desc, eq, getTableColumns, inArray, sql } from "drizzle-orm";
+import {
+	type SQL,
+	and,
+	desc,
+	eq,
+	getTableColumns,
+	gte,
+	inArray,
+	lte,
+	sql,
+} from "drizzle-orm";
 import exifr from "exifr";
 import sharp from "sharp";
 import { z } from "zod";
@@ -217,11 +227,36 @@ export const photoRouter = createTRPCRouter({
 		.input(
 			z.object({
 				tags: z.array(z.number()),
+				camera: z.number().optional(),
+				lens: z.number().optional(),
+				date: z
+					.object({
+						from: z.date().optional(),
+						to: z.date().optional(),
+					})
+					.optional(),
 			}),
 		)
-		.query(async ({ ctx, input }) => {
-			if (input.tags.length === 0 || input.tags[0] === 0) {
-				return await ctx.db.select().from(photos).orderBy(desc(photos.takenAt));
+		.mutation(async ({ ctx, input }) => {
+			const filters: SQL[] = [];
+			if (input.camera) filters.push(eq(photos.cameraId, input.camera));
+			if (input.lens) filters.push(eq(photos.lensId, input.lens));
+			if (input.date?.from && input.date?.to) {
+				filters.push(
+					gte(photos.takenAt, input.date.from),
+					lte(
+						photos.takenAt,
+						new Date(input.date.to.getTime() + 60 * 60 * 24 * 1000),
+					),
+				);
+			}
+
+			if (input.tags.length === 0) {
+				return await ctx.db
+					.select()
+					.from(photos)
+					.where(and(...filters))
+					.orderBy(desc(photos.takenAt));
 			}
 
 			return await ctx.db
@@ -232,7 +267,7 @@ export const photoRouter = createTRPCRouter({
 				.from(photos)
 				.innerJoin(photosToTags, eq(photos.id, photosToTags.photoId))
 				.innerJoin(tags, eq(photosToTags.tagId, tags.id))
-				.where(inArray(tags.id, input.tags))
+				.where(and(inArray(tags.id, input.tags), ...filters))
 				.having(({ count }) => eq(count, input.tags.length))
 				.groupBy(photos.id)
 				.orderBy(desc(photos.takenAt));

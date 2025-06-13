@@ -7,7 +7,7 @@ import { useDropzone } from "react-dropzone";
 import { useForm } from "react-hook-form";
 import type { z } from "zod";
 import { Combobox } from "~/components/combobox";
-import ReactSelect from "~/components/react-select";
+import { TagSelect } from "~/components/tag-select";
 import { Alert, AlertDescription, AlertTitle } from "~/components/ui/alert";
 import { Button } from "~/components/ui/button";
 import { Checkbox } from "~/components/ui/checkbox";
@@ -214,13 +214,9 @@ export default function ImportPage() {
 							<FormItem className="flex items-center">
 								<FormLabel>Apply tags:</FormLabel>
 								<FormControl>
-									<ReactSelect
-										isMulti={true}
-										options={options}
+									<TagSelect
 										ref={field.ref}
-										value={options.filter((c) => field.value.includes(c.value))}
 										onChange={(val) => field.onChange(val.map((c) => c.value))}
-										className="w-full"
 									/>
 								</FormControl>
 								<FormMessage />

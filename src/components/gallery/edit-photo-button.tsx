@@ -5,7 +5,6 @@ import { useForm } from "react-hook-form";
 import { IconButton, useLightboxState } from "yet-another-react-lightbox";
 import type z from "zod";
 import { Combobox } from "~/components/combobox";
-import ReactSelect from "~/components/react-select";
 import { Button } from "~/components/ui/button";
 import {
 	Dialog,
@@ -24,6 +23,7 @@ import {
 } from "~/components/ui/form";
 import { editPhotoSchema } from "~/lib/schemas";
 import { api } from "~/trpc/react";
+import { TagSelect } from "../tag-select";
 
 export function EditPhotoButton() {
 	const { currentSlide } = useLightboxState();
@@ -114,17 +114,11 @@ export function EditPhotoButton() {
 								<FormItem className="flex items-center">
 									<FormLabel>Tags:</FormLabel>
 									<FormControl>
-										<ReactSelect
-											isMulti={true}
-											options={options}
+										<TagSelect
 											ref={field.ref}
-											value={options.filter((c) =>
-												field.value.includes(c.value),
-											)}
 											onChange={(val) =>
 												field.onChange(val.map((c) => c.value))
 											}
-											className="w-full"
 										/>
 									</FormControl>
 									<FormMessage />

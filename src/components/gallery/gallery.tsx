@@ -9,10 +9,15 @@ import Captions from "yet-another-react-lightbox/plugins/captions";
 import Fullscreen from "yet-another-react-lightbox/plugins/fullscreen";
 import Zoom from "yet-another-react-lightbox/plugins/zoom";
 import { apertureString, shutterSpeedString } from "~/lib/utils";
-import type { RouterOutputs } from "~/trpc/react";
 import { AdminPlugin } from "./lightbox-admin-plugin";
 
-type PhotosOutput = RouterOutputs["photos"]["search"];
+import "yet-another-react-lightbox/styles.css";
+import "yet-another-react-lightbox/plugins/captions.css";
+import "react-photo-album/rows.css";
+import type { InferSelectModel } from "drizzle-orm";
+import type { photos } from "~/server/db/schema";
+
+type PhotosOutput = InferSelectModel<typeof photos>[];
 
 export default function Gallery({ photos }: { photos: PhotosOutput }) {
 	const { data: session } = useSession();

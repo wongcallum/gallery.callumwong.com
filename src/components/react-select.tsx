@@ -1,6 +1,6 @@
 import { Check, ChevronDown, X } from "lucide-react";
-import React, { type ReactElement, type Ref } from "react";
-import SelectComponent, {
+import React, { type ReactElement } from "react";
+import ReactSelectComponent, {
 	components,
 	type ClassNamesConfig,
 	type DropdownIndicatorProps,
@@ -15,6 +15,7 @@ import SelectComponent, {
 	type SelectInstance,
 	createFilter,
 } from "react-select";
+import ReactAsyncSelectComponent, { type AsyncProps } from "react-select/async";
 import { FixedSizeList as List } from "react-window";
 import { cn } from "~/lib/utils";
 
@@ -261,7 +262,7 @@ const BaseSelect = <IsMulti extends boolean = false>(
 	const instanceId = React.useId();
 
 	return (
-		<SelectComponent<OptionType, IsMulti, GroupBase<OptionType>>
+		<ReactSelectComponent<OptionType, IsMulti, GroupBase<OptionType>>
 			ref={ref}
 			instanceId={instanceId}
 			unstyled
@@ -285,15 +286,65 @@ const BaseSelect = <IsMulti extends boolean = false>(
 	);
 };
 
-export default React.forwardRef(BaseSelect) as <
+export const BaseSelectComponent = React.forwardRef(BaseSelect) as <
 	IsMulti extends boolean = false,
 >(
 	p: Props<OptionType, IsMulti> & {
-		ref?: Ref<
-			React.LegacyRef<
-				SelectInstance<OptionType, IsMulti, GroupBase<OptionType>>
-			>
-		>;
+		ref?: React.RefAttributes<
+			SelectInstance<OptionType, IsMulti, GroupBase<OptionType>>
+		>["ref"];
+
+		isMulti?: IsMulti;
+	},
+) => ReactElement;
+
+const AsyncSelect = <IsMulti extends boolean = false>(
+	props: AsyncProps<OptionType, IsMulti, GroupBase<OptionType>> & {
+		isMulti?: IsMulti;
+	},
+	ref: React.Ref<SelectInstance<OptionType, IsMulti, GroupBase<OptionType>>>,
+) => {
+	const {
+		styles = defaultStyles,
+		classNames = defaultClassNames,
+		components = {},
+		...rest
+	} = props;
+	const instanceId = React.useId();
+
+	return (
+		<ReactAsyncSelectComponent<OptionType, IsMulti, GroupBase<OptionType>>
+			ref={ref}
+			instanceId={instanceId}
+			unstyled
+			filterOption={createFilter({
+				matchFrom: "any",
+				stringify: (option) => option.label,
+			})}
+			components={{
+				DropdownIndicator,
+				ClearIndicator,
+				MultiValueRemove,
+				Option,
+				Menu,
+				MenuList,
+				...components,
+			}}
+			styles={styles}
+			classNames={classNames}
+			{...rest}
+		/>
+	);
+};
+
+export const AsyncSelectComponent = React.forwardRef(AsyncSelect) as <
+	IsMulti extends boolean = false,
+>(
+	p: AsyncProps<OptionType, IsMulti, GroupBase<OptionType>> & {
+		ref?: React.RefAttributes<
+			SelectInstance<OptionType, IsMulti, GroupBase<OptionType>>
+		>["ref"];
+
 		isMulti?: IsMulti;
 	},
 ) => ReactElement;

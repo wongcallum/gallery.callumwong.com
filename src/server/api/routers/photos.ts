@@ -237,7 +237,7 @@ export const photoRouter = createTRPCRouter({
 					.optional(),
 			}),
 		)
-		.mutation(async ({ ctx, input }) => {
+		.query(async ({ ctx, input }) => {
 			const filters: SQL[] = [];
 			if (input.camera) filters.push(eq(photos.cameraId, input.camera));
 			if (input.lens) filters.push(eq(photos.lensId, input.lens));

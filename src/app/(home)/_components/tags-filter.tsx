@@ -1,6 +1,7 @@
 import type { DateRange } from "react-day-picker";
 import { Combobox } from "~/components/combobox";
 import { DatePickerWithRange } from "~/components/date-range-picker";
+import { Button } from "~/components/ui/button";
 import { SidebarGroup, SidebarGroupLabel } from "~/components/ui/sidebar";
 import { api } from "~/trpc/react";
 
@@ -50,6 +51,9 @@ export default function TagsFilter({
 				/>
 				<DatePickerWithRange date={date} setDate={setDate} />
 			</div>
+			<Button type="submit" className="mt-2" size="sm">
+				Apply
+			</Button>
 		</SidebarGroup>
 	);
 }

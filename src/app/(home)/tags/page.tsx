@@ -5,7 +5,7 @@ import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { Button } from "~/components/ui/button";
 import { Form, FormControl, FormField, FormItem } from "~/components/ui/form";
-import { api } from "~/trpc/react";
+import { type RouterOutputs, api } from "~/trpc/react";
 
 import "yet-another-react-lightbox/styles.css";
 import "yet-another-react-lightbox/plugins/captions.css";
@@ -23,12 +23,14 @@ import { Skeleton } from "~/components/ui/skeleton";
 import { PageSwitcher } from "../_components/page-switcher";
 import TagsFilter from "../_components/tags-filter";
 
+type SearchOutput = RouterOutputs["photos"]["search"];
+
 const formSchema = z.object({
 	search: z.array(z.coerce.number()),
 });
 
 export default function Tags() {
-	const searchMutation = api.photos.search.useMutation();
+	const utils = api.useUtils();
 
 	const form = useForm<z.infer<typeof formSchema>>({
 		resolver: zodResolver(formSchema),
@@ -37,22 +39,27 @@ export default function Tags() {
 		},
 	});
 
-	useEffect(() => {
-		searchMutation.mutate({ tags: [] });
-	}, [searchMutation.mutate]);
-
-	function onSubmit(values: z.infer<typeof formSchema>) {
-		searchMutation.mutate({
-			tags: values.search,
-			camera: camera ? Number.parseInt(camera) : undefined,
-			lens: lens ? Number.parseInt(lens) : undefined,
-			date,
-		});
-	}
-
+	const [searchData, setSearchData] = useState<SearchOutput | undefined>();
 	const [camera, setCamera] = useState<string>();
 	const [lens, setLens] = useState<string>();
 	const [date, setDate] = useState<DateRange | undefined>();
+
+	async function onSubmit(values: z.infer<typeof formSchema>) {
+		setSearchData(undefined);
+		setSearchData(
+			await utils.photos.search.fetch({
+				tags: values.search,
+				camera: camera ? Number.parseInt(camera) : undefined,
+				lens: lens ? Number.parseInt(lens) : undefined,
+				date,
+			}),
+		);
+	}
+
+	// biome-ignore lint/correctness/useExhaustiveDependencies: <explanation>
+	useEffect(() => {
+		onSubmit({ search: [] });
+	}, []);
 
 	return (
 		<>
@@ -98,8 +105,8 @@ export default function Tags() {
 					</Form>
 				</div>
 
-				{searchMutation.data ? (
-					<Gallery photos={searchMutation.data} />
+				{searchData ? (
+					<Gallery photos={searchData} />
 				) : (
 					<Skeleton className="aspect-3/2 h-[200px] rounded-xl" />
 				)}

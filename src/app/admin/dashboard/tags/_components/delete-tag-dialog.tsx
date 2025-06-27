@@ -29,6 +29,7 @@ export function DeleteTagDialog({
 		await deleteMutation.mutateAsync(id, {
 			async onSuccess() {
 				await utils.tags.invalidate();
+				await utils.photos.search.invalidate();
 				setOpen(false);
 			},
 		});

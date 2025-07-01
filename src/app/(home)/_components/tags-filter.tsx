@@ -12,6 +12,7 @@ interface TagsFilterProps {
 	setLens: (value: string | undefined) => void;
 	date: DateRange | undefined;
 	setDate: (value: DateRange | undefined) => void;
+	onApply: () => void;
 }
 
 export default function TagsFilter({
@@ -21,6 +22,7 @@ export default function TagsFilter({
 	setLens,
 	date,
 	setDate,
+	onApply,
 }: TagsFilterProps) {
 	const cameras = api.filter.cameras.useQuery();
 	const lenses = api.filter.lens.useQuery();
@@ -51,7 +53,7 @@ export default function TagsFilter({
 				/>
 				<DatePickerWithRange date={date} setDate={setDate} />
 			</div>
-			<Button type="submit" className="mt-2" size="sm">
+			<Button type="submit" className="mt-2" size="sm" onClick={onApply}>
 				Apply
 			</Button>
 		</SidebarGroup>

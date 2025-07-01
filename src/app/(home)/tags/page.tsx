@@ -73,6 +73,7 @@ export default function Tags() {
 						setLens={setLens}
 						date={date}
 						setDate={setDate}
+						onApply={form.handleSubmit(onSubmit)}
 					/>
 				</SidebarContent>
 			</Sidebar>

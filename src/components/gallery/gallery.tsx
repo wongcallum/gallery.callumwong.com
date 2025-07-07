@@ -1,6 +1,6 @@
 "use client";
 
-import { Aperture, Film, Ruler, Timer } from "lucide-react";
+import { Aperture, Camera, Film, Ruler, Timer, View } from "lucide-react";
 import { useSession } from "next-auth/react";
 import { useState } from "react";
 import { RowsPhotoAlbum } from "react-photo-album";
@@ -17,7 +17,10 @@ import "react-photo-album/rows.css";
 import type { InferSelectModel } from "drizzle-orm";
 import type { photos } from "~/server/db/schema";
 
-type PhotosOutput = InferSelectModel<typeof photos>[];
+type PhotosOutput = (InferSelectModel<typeof photos> & {
+	cameraName: string | null;
+	lensName: string | null;
+})[];
 
 export default function Gallery({ photos }: { photos: PhotosOutput }) {
 	const { data: session } = useSession();
@@ -57,28 +60,38 @@ export default function Gallery({ photos }: { photos: PhotosOutput }) {
 				index={index}
 				slides={photos.map((photo) => ({
 					src: photo.url,
-					title: photo.title,
+					title: `${photo.takenAt?.toLocaleString()}${photo.title ? ` - ${photo.title}` : ""}`,
 					width: photo.width,
 					height: photo.height,
 					description: (
-						<div className="flex justify-center gap-12 md:gap-24">
-							<div className="flex flex-row items-center gap-1">
-								<Film />
-								<span>{photo.isoSpeed}</span>
-							</div>
-							<div className="flex flex-row items-center gap-1">
-								<Timer />
-								<span title={photo.shutterSpeed?.toString()}>
-									{shutterSpeedString(photo.shutterSpeed)}
-								</span>
-							</div>
-							<div className="flex flex-row items-center gap-1">
-								<Aperture />
-								<span>{apertureString(photo.aperture)}</span>
-							</div>
-							<div className="flex flex-row items-center gap-1">
-								<Ruler />
-								<span>{photo.focalLength}mm</span>
+						<div className="flex justify-center">
+							<div className="grid w-fit grid-cols-4 justify-items-center gap-x-4 md:gap-x-24">
+								<div className="flex flex-row items-center justify-center gap-1">
+									<Film />
+									<span>{photo.isoSpeed}</span>
+								</div>
+								<div className="flex flex-row items-center justify-center gap-1">
+									<Timer />
+									<span title={photo.shutterSpeed?.toString()}>
+										{shutterSpeedString(photo.shutterSpeed)}
+									</span>
+								</div>
+								<div className="flex flex-row items-center justify-center gap-1">
+									<Aperture />
+									<span>{apertureString(photo.aperture)}</span>
+								</div>
+								<div className="flex flex-row items-center justify-center gap-1">
+									<Ruler />
+									<span>{photo.focalLength}mm</span>
+								</div>
+								<div className="col-span-2 flex flex-row items-center justify-center gap-1">
+									<Camera />
+									<span>{photo.cameraName}</span>
+								</div>
+								<div className="col-span-2 flex flex-row items-center justify-center gap-1">
+									<View />
+									<span>{photo.lensName}</span>
+								</div>
 							</div>
 						</div>
 					),
@@ -93,10 +106,6 @@ export default function Gallery({ photos }: { photos: PhotosOutput }) {
 					showToggle: true,
 				}}
 				styles={{
-					captionsTitleContainer: {
-						display: "flex",
-						justifyContent: "center",
-					},
 					root: {
 						zIndex: 49,
 					},
@@ -107,6 +116,7 @@ export default function Gallery({ photos }: { photos: PhotosOutput }) {
 							<img
 								src={slide.src}
 								alt={slide.alt}
+								draggable={false}
 								className="max-h-full xl:max-h-9/10"
 							/>
 						);

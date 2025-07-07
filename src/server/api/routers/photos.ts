@@ -296,18 +296,24 @@ export const photoRouter = createTRPCRouter({
 				return await ctx.db
 					.select({
 						...getTableColumns(photos),
+						cameraName: cameras.name,
+						lensName: lenses.name,
 					})
 					.from(photos)
 					.where(and(...filters))
 					.orderBy(desc(photos.takenAt))
 					.limit(input.pageSize)
-					.offset(input.pageSize * (input.page - 1));
+					.offset(input.pageSize * (input.page - 1))
+					.leftJoin(cameras, eq(photos.cameraId, cameras.id))
+					.leftJoin(lenses, eq(photos.lensId, lenses.id));
 			}
 
 			return await ctx.db
 				.select({
 					...getTableColumns(photos),
 					tagCount: sql<number>`cast(count(${tags.id}) as int)`,
+					cameraName: cameras.name,
+					lensName: lenses.name,
 				})
 				.from(photos)
 				.innerJoin(photosToTags, eq(photos.id, photosToTags.photoId))
@@ -317,7 +323,9 @@ export const photoRouter = createTRPCRouter({
 				.groupBy(photos.id)
 				.orderBy(desc(photos.takenAt))
 				.limit(input.pageSize)
-				.offset(input.pageSize * (input.page - 1));
+				.offset(input.pageSize * (input.page - 1))
+				.leftJoin(cameras, eq(photos.cameraId, cameras.id))
+				.leftJoin(lenses, eq(photos.lensId, lenses.id));
 		}),
 
 	withTags: protectedProcedure

@@ -10,7 +10,7 @@ import {
 	publicProcedure,
 } from "~/server/api/trpc";
 import { db } from "~/server/db";
-import { collections, photos } from "~/server/db/schema";
+import { cameras, collections, lenses, photos } from "~/server/db/schema";
 
 async function getLatestPhoto(collectionId: number) {
 	const latestPhoto = await db
@@ -106,12 +106,13 @@ export const collectionRouter = createTRPCRouter({
 	withPhotos: publicProcedure
 		.input(z.number())
 		.query(async ({ ctx, input }) => {
-			const collection = await ctx.db.query.collections.findFirst({
-				where: eq(collections.id, input),
-				with: {
-					photos: true,
-				},
-			});
+			const collection = await ctx.db
+				.select({
+					...getTableColumns(collections),
+				})
+				.from(collections)
+				.where(eq(collections.id, input))
+				.then((rows) => rows[0]);
 
 			if (!collection)
 				throw new TRPCError({
@@ -119,10 +120,24 @@ export const collectionRouter = createTRPCRouter({
 					message: "No collection with id found",
 				});
 
+			const photosData = await ctx.db
+				.select({
+					...getTableColumns(photos),
+					cameraName: cameras.name,
+					lensName: lenses.name,
+				})
+				.from(photos)
+				.leftJoin(cameras, eq(photos.cameraId, cameras.id))
+				.leftJoin(lenses, eq(photos.lensId, lenses.id))
+				.where(eq(photos.collectionId, input));
+
 			if (!collection.thumbnailPhotoURL) {
 				collection.thumbnailPhotoURL = await getLatestPhoto(collection.id);
 			}
 
-			return collection;
+			return {
+				...collection,
+				photos: photosData,
+			};
 		}),
 });

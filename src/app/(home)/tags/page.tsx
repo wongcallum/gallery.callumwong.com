@@ -33,7 +33,7 @@ import TagsFilter from "../_components/tags-filter";
 
 type SearchOutput = RouterOutputs["photos"]["searchPaginated"];
 
-const PAGE_SIZE = 10;
+const PAGE_SIZE = 50;
 
 export default function Tags() {
 	const utils = api.useUtils();
@@ -141,12 +141,18 @@ export default function Tags() {
 				</div>
 
 				{searchData ? (
-					<Gallery photos={searchData} />
+					searchData.length > 0 ? (
+						<Gallery photos={searchData} />
+					) : (
+						<div className="flex justify-center">
+							<p className="text-muted-foreground">No photos found</p>
+						</div>
+					)
 				) : (
 					<Skeleton className="aspect-3/2 h-[200px] rounded-xl" />
 				)}
 
-				{countData && (
+				{countData ? (
 					<Pagination>
 						<PaginationContent>
 							<PaginationItem>
@@ -180,7 +186,7 @@ export default function Tags() {
 							</PaginationItem>
 						</PaginationContent>
 					</Pagination>
-				)}
+				) : null}
 			</div>
 		</>
 	);

@@ -1,19 +1,27 @@
 "use client";
-
-import { zodResolver } from "@hookform/resolvers/zod";
-import { useForm } from "react-hook-form";
-import { z } from "zod";
-import { Button } from "~/components/ui/button";
-import { Form, FormControl, FormField, FormItem } from "~/components/ui/form";
+import {
+	parseAsArrayOf,
+	parseAsInteger,
+	parseAsIsoDate,
+	useQueryState,
+	useQueryStates,
+} from "nuqs";
 import { type RouterOutputs, api } from "~/trpc/react";
-
 import "yet-another-react-lightbox/styles.css";
 import "yet-another-react-lightbox/plugins/captions.css";
 import "react-photo-album/rows.css";
-import { useEffect, useState } from "react";
-import type { DateRange } from "react-day-picker";
+import { useEffect, useRef, useState } from "react";
+import { useDebouncedCallback } from "use-debounce";
 import Gallery from "~/components/gallery/gallery";
 import { TagSelect } from "~/components/tag-select";
+import {
+	Pagination,
+	PaginationContent,
+	PaginationItem,
+	PaginationLink,
+	PaginationNext,
+	PaginationPrevious,
+} from "~/components/ui/pagination";
 import {
 	Sidebar,
 	SidebarContent,
@@ -23,43 +31,76 @@ import { Skeleton } from "~/components/ui/skeleton";
 import { PageSwitcher } from "../_components/page-switcher";
 import TagsFilter from "../_components/tags-filter";
 
-type SearchOutput = RouterOutputs["photos"]["search"];
+type SearchOutput = RouterOutputs["photos"]["searchPaginated"];
 
-const formSchema = z.object({
-	search: z.array(z.coerce.number()),
-});
+const PAGE_SIZE = 10;
 
 export default function Tags() {
 	const utils = api.useUtils();
 
-	const form = useForm<z.infer<typeof formSchema>>({
-		resolver: zodResolver(formSchema),
-		defaultValues: {
-			search: [],
-		},
-	});
-
 	const [searchData, setSearchData] = useState<SearchOutput | undefined>();
-	const [camera, setCamera] = useState<string>();
-	const [lens, setLens] = useState<string>();
-	const [date, setDate] = useState<DateRange | undefined>();
+	const [countData, setCountData] = useState<number>();
+	const [tags, setTags] = useQueryState<number[]>(
+		"tags",
+		parseAsArrayOf(parseAsInteger).withDefault([]),
+	);
+	const [camera, setCamera] = useQueryState<number>("camera", parseAsInteger);
+	const [lens, setLens] = useQueryState<number>("lens", parseAsInteger);
+	const [date, setDate] = useQueryStates({
+		from: parseAsIsoDate,
+		to: parseAsIsoDate,
+	});
+	const [page, setPage] = useQueryState("page", parseAsInteger.withDefault(1));
 
-	async function onSubmit(values: z.infer<typeof formSchema>) {
-		setSearchData(undefined);
-		setSearchData(
-			await utils.photos.search.fetch({
-				tags: values.search,
-				camera: camera ? Number.parseInt(camera) : undefined,
-				lens: lens ? Number.parseInt(lens) : undefined,
-				date,
-			}),
-		);
-	}
+	const search = useDebouncedCallback(
+		async () => {
+			setSearchData(
+				await utils.photos.searchPaginated.fetch({
+					tags,
+					camera,
+					lens,
+					date,
+					page,
+					pageSize: PAGE_SIZE,
+				}),
+			);
+			setCountData(
+				await utils.photos.count.fetch({
+					tags,
+					camera,
+					lens,
+					date,
+				}),
+			);
+		},
+		500,
+		{ leading: true },
+	);
 
-	// biome-ignore lint/correctness/useExhaustiveDependencies: <explanation>
 	useEffect(() => {
-		onSubmit({ search: [] });
-	}, []);
+		search();
+	}, [search]);
+
+	const prevFiltersRef = useRef({ tags, camera, lens, date });
+	useEffect(() => {
+		const prevFilters = prevFiltersRef.current;
+		const filtersChanged =
+			JSON.stringify(prevFilters.tags) !== JSON.stringify(tags) ||
+			prevFilters.camera !== camera ||
+			prevFilters.lens !== lens ||
+			JSON.stringify(prevFilters.date) !== JSON.stringify(date);
+
+		if (filtersChanged && page !== 1) {
+			setPage(1);
+		}
+
+		prevFiltersRef.current = { tags, camera, lens, date };
+	}, [tags, camera, lens, date, page, setPage]);
+
+	// biome-ignore lint/correctness/useExhaustiveDependencies: search function already includes all dependencies
+	useEffect(() => {
+		search();
+	}, [tags, camera, lens, date, page]);
 
 	return (
 		<>
@@ -67,49 +108,78 @@ export default function Tags() {
 				<SidebarContent>
 					<PageSwitcher selected="tags" />
 					<TagsFilter
-						camera={camera}
-						setCamera={setCamera}
-						lens={lens}
-						setLens={setLens}
-						date={date}
-						setDate={setDate}
-						onApply={form.handleSubmit(onSubmit)}
+						camera={camera?.toString()}
+						setCamera={(val) => setCamera(val ? Number.parseInt(val) : null)}
+						lens={lens?.toString()}
+						setLens={(val) => setLens(val ? Number.parseInt(val) : null)}
+						date={{
+							from: date.from || undefined,
+							to: date.to || undefined,
+						}}
+						setDate={(val) =>
+							setDate(
+								val
+									? {
+											from: val?.from,
+											to: val?.to,
+										}
+									: null,
+							)
+						}
 					/>
 				</SidebarContent>
 			</Sidebar>
 			<div className="w-full p-4">
 				<div className="mb-4 flex items-center gap-2">
 					<SidebarTrigger className="-ml-1" />
-					<Form {...form}>
-						<form
-							onSubmit={form.handleSubmit(onSubmit)}
-							className="flex grow items-center gap-2"
-						>
-							<FormField
-								control={form.control}
-								name="search"
-								render={({ field }) => (
-									<FormItem className="grow">
-										<FormControl>
-											<TagSelect
-												ref={field.ref}
-												onChange={(val) =>
-													field.onChange(val.map((c) => c.value))
-												}
-											/>
-										</FormControl>
-									</FormItem>
-								)}
-							/>
-							<Button type="submit">Search</Button>
-						</form>
-					</Form>
+					<TagSelect
+						value={tags}
+						onChange={(val) => {
+							setTags(val.map((opt) => opt.value as number));
+						}}
+					/>
 				</div>
 
 				{searchData ? (
 					<Gallery photos={searchData} />
 				) : (
 					<Skeleton className="aspect-3/2 h-[200px] rounded-xl" />
+				)}
+
+				{countData && (
+					<Pagination>
+						<PaginationContent>
+							<PaginationItem>
+								<PaginationPrevious
+									href="#"
+									onClick={() => setPage(page > 1 ? page - 1 : 1)}
+								/>
+							</PaginationItem>
+							{Array(Math.ceil(countData / PAGE_SIZE))
+								.fill(null)
+								.map((value, index) => (
+									// biome-ignore lint/suspicious/noArrayIndexKey: <explanation>
+									<PaginationItem key={index}>
+										<PaginationLink
+											href="#"
+											onClick={() => {
+												setPage(index + 1);
+											}}
+										>
+											{index + 1}
+										</PaginationLink>
+									</PaginationItem>
+								))}
+							<PaginationItem>
+								<PaginationNext
+									href="#"
+									onClick={() =>
+										setPage(page < countData / PAGE_SIZE ? page + 1 : page)
+									}
+								/>
+							</PaginationItem>
+						</PaginationContent>
+					</Pagination>
 				)}
 			</div>
 		</>

@@ -4,7 +4,6 @@
 
 - quick modify collections
 - <https://docs.aws.amazon.com/lambda/latest/dg/with-s3-tutorial.html#with-s3-tutorial-create-function-package>
-- pagination
 
 ## Low Priority
 

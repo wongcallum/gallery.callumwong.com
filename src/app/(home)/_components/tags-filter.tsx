@@ -1,7 +1,6 @@
 import type { DateRange } from "react-day-picker";
 import { Combobox } from "~/components/combobox";
 import { DatePickerWithRange } from "~/components/date-range-picker";
-import { Button } from "~/components/ui/button";
 import { SidebarGroup, SidebarGroupLabel } from "~/components/ui/sidebar";
 import { api } from "~/trpc/react";
 
@@ -12,7 +11,6 @@ interface TagsFilterProps {
 	setLens: (value: string | undefined) => void;
 	date: DateRange | undefined;
 	setDate: (value: DateRange | undefined) => void;
-	onApply: () => void;
 }
 
 export default function TagsFilter({
@@ -22,7 +20,6 @@ export default function TagsFilter({
 	setLens,
 	date,
 	setDate,
-	onApply,
 }: TagsFilterProps) {
 	const cameras = api.filter.cameras.useQuery();
 	const lenses = api.filter.lens.useQuery();
@@ -32,7 +29,7 @@ export default function TagsFilter({
 			<SidebarGroupLabel>Filter</SidebarGroupLabel>
 			<div className="flex flex-col gap-2">
 				<Combobox
-					value={camera}
+					value={camera?.toString()}
 					setValue={setCamera}
 					placeholder="All cameras"
 					options={
@@ -42,7 +39,7 @@ export default function TagsFilter({
 					}
 				/>
 				<Combobox
-					value={lens}
+					value={lens?.toString()}
 					setValue={setLens}
 					placeholder="All lenses"
 					options={
@@ -53,9 +50,6 @@ export default function TagsFilter({
 				/>
 				<DatePickerWithRange date={date} setDate={setDate} />
 			</div>
-			<Button type="submit" className="mt-2" size="sm" onClick={onApply}>
-				Apply
-			</Button>
 		</SidebarGroup>
 	);
 }

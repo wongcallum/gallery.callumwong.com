@@ -3,6 +3,7 @@ import { TRPCError } from "@trpc/server";
 import {
 	type SQL,
 	and,
+	count,
 	desc,
 	eq,
 	getTableColumns,
@@ -72,6 +73,18 @@ async function insertOrSelectCamera(
 		where: (cameras, { eq }) => eq(cameras.name, model),
 	});
 }
+
+const filterInput = z.object({
+	tags: z.array(z.number()),
+	camera: z.number().optional().nullable(),
+	lens: z.number().optional().nullable(),
+	date: z
+		.object({
+			from: z.date().nullable(),
+			to: z.date().nullable(),
+		})
+		.optional(),
+});
 
 export const photoRouter = createTRPCRouter({
 	create: protectedProcedure
@@ -223,18 +236,46 @@ export const photoRouter = createTRPCRouter({
 			}
 		}),
 
-	search: publicProcedure
+	count: publicProcedure.input(filterInput).query(async ({ ctx, input }) => {
+		const filters: SQL[] = [];
+		if (input.camera) filters.push(eq(photos.cameraId, input.camera));
+		if (input.lens) filters.push(eq(photos.lensId, input.lens));
+		if (input.date?.from && input.date?.to) {
+			filters.push(
+				gte(photos.takenAt, input.date.from),
+				lte(
+					photos.takenAt,
+					new Date(input.date.to.getTime() + 60 * 60 * 24 * 1000),
+				),
+			);
+		}
+
+		if (input.tags.length === 0) {
+			return await ctx.db.$count(photos, and(...filters));
+		}
+
+		const matchingPhotos = ctx.db
+			.select({
+				photoId: photos.id,
+			})
+			.from(photos)
+			.innerJoin(photosToTags, eq(photos.id, photosToTags.photoId))
+			.innerJoin(tags, eq(photosToTags.tagId, tags.id))
+			.where(and(inArray(tags.id, input.tags), ...filters))
+			.groupBy(photos.id)
+			.having(sql`count(${tags.id}) = ${input.tags.length}`)
+			.as("matching_photos");
+
+		const total = await ctx.db.select({ total: count() }).from(matchingPhotos);
+
+		return total[0]?.total || 0;
+	}),
+
+	searchPaginated: publicProcedure
 		.input(
-			z.object({
-				tags: z.array(z.number()),
-				camera: z.number().optional(),
-				lens: z.number().optional(),
-				date: z
-					.object({
-						from: z.date().optional(),
-						to: z.date().optional(),
-					})
-					.optional(),
+			filterInput.extend({
+				pageSize: z.number().min(10).max(50).default(50),
+				page: z.number().default(1),
 			}),
 		)
 		.query(async ({ ctx, input }) => {
@@ -251,26 +292,32 @@ export const photoRouter = createTRPCRouter({
 				);
 			}
 
-			if (input.tags.length === 0) {
+			if (!input.tags || input.tags.length === 0) {
 				return await ctx.db
-					.select()
+					.select({
+						...getTableColumns(photos),
+					})
 					.from(photos)
 					.where(and(...filters))
-					.orderBy(desc(photos.takenAt));
+					.orderBy(desc(photos.takenAt))
+					.limit(input.pageSize)
+					.offset(input.pageSize * (input.page - 1));
 			}
 
 			return await ctx.db
 				.select({
 					...getTableColumns(photos),
-					count: sql<number>`cast(count(${tags.id}) as int)`,
+					tagCount: sql<number>`cast(count(${tags.id}) as int)`,
 				})
 				.from(photos)
 				.innerJoin(photosToTags, eq(photos.id, photosToTags.photoId))
 				.innerJoin(tags, eq(photosToTags.tagId, tags.id))
 				.where(and(inArray(tags.id, input.tags), ...filters))
-				.having(({ count }) => eq(count, input.tags.length))
+				.having(({ tagCount }) => eq(tagCount, input.tags.length))
 				.groupBy(photos.id)
-				.orderBy(desc(photos.takenAt));
+				.orderBy(desc(photos.takenAt))
+				.limit(input.pageSize)
+				.offset(input.pageSize * (input.page - 1));
 		}),
 
 	withTags: protectedProcedure

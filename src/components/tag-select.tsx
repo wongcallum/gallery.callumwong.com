@@ -17,6 +17,7 @@ interface Filter {
 }
 
 interface TagSelectProps {
+	value?: number[];
 	onChange: (
 		newValue: MultiValue<OptionType>,
 		actionMeta: ActionMeta<OptionType>,
@@ -24,8 +25,18 @@ interface TagSelectProps {
 	ref?: Ref<SelectInstance<OptionType, true, GroupBase<OptionType>>>;
 }
 
-export function TagSelect({ onChange, ref }: TagSelectProps) {
+export function TagSelect({ value, onChange, ref }: TagSelectProps) {
+	const allTags = api.tags.all.useQuery();
 	const tagsSearchMutation = api.tags.search.useMutation();
+
+	const selectedTags =
+		value && allTags.data
+			? (value.map((tagId) => {
+					const tag = allTags.data.find((t) => t.id === tagId);
+					return tag ? { value: tag.id, label: tag.name } : null;
+				}) as OptionType[])
+			: [];
+
 	const handleSearch = useDebouncedCallback(
 		(value: string, callback: (options: OptionType[]) => void) => {
 			tagsSearchMutation.mutateAsync(
@@ -53,6 +64,7 @@ export function TagSelect({ onChange, ref }: TagSelectProps) {
 			cacheOptions
 			defaultOptions
 			loadOptions={handleSearch}
+			value={selectedTags}
 			ref={ref}
 			onChange={onChange}
 		/>

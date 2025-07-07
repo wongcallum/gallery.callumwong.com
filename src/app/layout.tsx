@@ -2,6 +2,7 @@ import "~/styles/globals.css";
 
 import type { Metadata } from "next";
 
+import { NuqsAdapter } from "nuqs/adapters/next/app";
 import { ThemeProvider } from "~/components/theme-provider";
 import { TRPCReactProvider } from "~/trpc/react";
 
@@ -23,7 +24,9 @@ export default function RootLayout({
 					enableSystem
 					disableTransitionOnChange
 				>
-					<TRPCReactProvider>{children}</TRPCReactProvider>
+					<NuqsAdapter>
+						<TRPCReactProvider>{children}</TRPCReactProvider>
+					</NuqsAdapter>
 				</ThemeProvider>
 			</body>
 		</html>

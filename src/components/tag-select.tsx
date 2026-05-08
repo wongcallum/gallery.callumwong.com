@@ -57,7 +57,7 @@ export function TagSelect({ value, onChange, ref }: TagSelectProps) {
 			cacheOptions
 			defaultOptions
 			loadOptions={handleSearch}
-			value={selectedTags}
+			value={value !== undefined ? selectedTags : undefined}
 			ref={ref}
 			onChange={onChange}
 		/>

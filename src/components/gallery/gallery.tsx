@@ -64,38 +64,61 @@ export default function Gallery({ photos }: { photos: PhotosOutput }) {
 					title: `${photo.takenAt?.toLocaleString()}${photo.title ? ` - ${photo.title}` : ""}`,
 					width: photo.width,
 					height: photo.height,
-					description: (
-						<div className="flex justify-center">
-							<div className="grid w-fit grid-cols-4 justify-items-center gap-x-4 md:gap-x-24">
-								<div className="flex flex-row items-center justify-center gap-1">
-									<Film />
-									<span>{photo.isoSpeed}</span>
-								</div>
-								<div className="flex flex-row items-center justify-center gap-1">
-									<Timer />
-									<span title={photo.shutterSpeed?.toString()}>
-										{shutterSpeedString(photo.shutterSpeed)}
-									</span>
-								</div>
-								<div className="flex flex-row items-center justify-center gap-1">
-									<Aperture />
-									<span>{apertureString(photo.aperture)}</span>
-								</div>
-								<div className="flex flex-row items-center justify-center gap-1">
-									<Ruler />
-									<span>{photo.focalLength}mm</span>
-								</div>
-								<div className="col-span-2 flex flex-row items-center justify-center gap-1">
-									<Camera />
-									<span>{photo.cameraName}</span>
-								</div>
-								<div className="col-span-2 flex flex-row items-center justify-center gap-1">
-									<View />
-									<span>{photo.lensName}</span>
+					description: (() => {
+						const metadata = [
+							photo.isoSpeed != null && {
+								icon: <Film />,
+								label: String(photo.isoSpeed),
+							},
+							photo.shutterSpeed != null && {
+								icon: <Timer />,
+								label: shutterSpeedString(photo.shutterSpeed),
+								title: photo.shutterSpeed.toString(),
+							},
+							photo.aperture != null && {
+								icon: <Aperture />,
+								label: apertureString(photo.aperture),
+							},
+							photo.focalLength != null && {
+								icon: <Ruler />,
+								label: `${photo.focalLength}mm`,
+							},
+							photo.cameraName && {
+								icon: <Camera />,
+								label: photo.cameraName,
+								wide: true,
+							},
+							photo.lensName && {
+								icon: <View />,
+								label: photo.lensName,
+								wide: true,
+							},
+						].filter(Boolean) as {
+							icon: React.ReactNode;
+							label: string;
+							title?: string;
+							wide?: boolean;
+						}[];
+
+						if (metadata.length === 0) return undefined;
+
+						return (
+							<div className="flex justify-center">
+								<div className="flex flex-wrap justify-center gap-x-4 gap-y-1 md:gap-x-12">
+									{metadata.map((item) => (
+										<div
+											key={item.label}
+											className="flex flex-row items-center justify-center gap-1"
+											title={item.title}
+										>
+											{item.icon}
+											<span>{item.label}</span>
+										</div>
+									))}
 								</div>
 							</div>
-						</div>
-					),
+						);
+					})(),
 				}))}
 				controller={{
 					closeOnBackdropClick: true,

@@ -6,7 +6,7 @@ import {
 	useQueryState,
 	useQueryStates,
 } from "nuqs";
-import { type RouterOutputs, api } from "~/trpc/react";
+import { api, type RouterOutputs } from "~/trpc/react";
 import "yet-another-react-lightbox/styles.css";
 import "yet-another-react-lightbox/plugins/captions.css";
 import "react-photo-album/rows.css";
@@ -109,9 +109,11 @@ export default function Tags() {
 					<PageSwitcher selected="tags" />
 					<TagsFilter
 						camera={camera?.toString()}
-						setCamera={(val) => setCamera(val ? Number.parseInt(val) : null)}
+						setCamera={(val) =>
+							setCamera(val ? Number.parseInt(val, 10) : null)
+						}
 						lens={lens?.toString()}
-						setLens={(val) => setLens(val ? Number.parseInt(val) : null)}
+						setLens={(val) => setLens(val ? Number.parseInt(val, 10) : null)}
 						date={{
 							from: date.from || undefined,
 							to: date.to || undefined,
@@ -149,7 +151,7 @@ export default function Tags() {
 						</div>
 					)
 				) : (
-					<Skeleton className="aspect-3/2 h-[200px] rounded-xl" />
+					<Skeleton className="aspect-3/2 h-50 rounded-xl" />
 				)}
 
 				{countData ? (
@@ -163,8 +165,8 @@ export default function Tags() {
 							</PaginationItem>
 							{Array(Math.ceil(countData / PAGE_SIZE))
 								.fill(null)
-								.map((value, index) => (
-									// biome-ignore lint/suspicious/noArrayIndexKey: <explanation>
+								.map((_value, index) => (
+									// biome-ignore lint/suspicious/noArrayIndexKey: pagination items have no stable id
 									<PaginationItem key={index}>
 										<PaginationLink
 											href="#"

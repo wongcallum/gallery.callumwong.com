@@ -32,7 +32,7 @@ export default function ImportPage() {
 	const collections = api.collections.all.useQuery();
 	const tags = api.tags.all.useQuery();
 
-	const options =
+	const _options =
 		tags.data?.map((tag) => ({
 			value: tag.id,
 			label: tag.name,
@@ -130,7 +130,7 @@ export default function ImportPage() {
 				<ImageUpIcon className="h-12 w-12 fill-primary/75" />
 				<div className="mt-4 mb-2">Drag & drop here or click to select</div>
 				<span
-					className={cn("-translate-x-1/2 absolute bottom-2 left-1/2 text-xs", {
+					className={cn("absolute bottom-2 left-1/2 -translate-x-1/2 text-xs", {
 						"text-destructive": isDragReject || fileRejections.length > 0,
 						"text-muted-foreground":
 							!isDragReject && !(fileRejections.length > 0),
@@ -145,6 +145,7 @@ export default function ImportPage() {
 						key={file.preview}
 						className="flex flex-col items-center text-center"
 					>
+						{/* biome-ignore lint/performance/noImgElement: preview of local file blob */}
 						<img src={file.preview} alt={file.name} className="rounded-md" />
 						<p className="my-1 text-sm">{file.name}</p>
 						<p className="mb-1 text-muted-foreground text-xs">

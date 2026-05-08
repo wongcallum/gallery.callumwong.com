@@ -1,22 +1,22 @@
 import { Check, ChevronDown, X } from "lucide-react";
 import React, { type ReactElement } from "react";
 import ReactSelectComponent, {
-	components,
 	type ClassNamesConfig,
+	type ClearIndicatorProps,
+	components,
+	createFilter,
 	type DropdownIndicatorProps,
 	type GroupBase,
-	type StylesConfig,
-	type MultiValueRemoveProps,
-	type ClearIndicatorProps,
-	type OptionProps,
-	type MenuProps,
 	type MenuListProps,
+	type MenuProps,
+	type MultiValueRemoveProps,
+	type OptionProps,
 	type Props,
 	type SelectInstance,
-	createFilter,
+	type StylesConfig,
 } from "react-select";
 import ReactAsyncSelectComponent, { type AsyncProps } from "react-select/async";
-import { FixedSizeList as List } from "react-window";
+import { List } from "react-window";
 import { cn } from "~/lib/utils";
 
 /** select option type */
@@ -27,7 +27,7 @@ export type OptionType = { label: string; value: string | number };
  */
 const selectStyles = {
 	controlStyles: {
-		base: "flex !min-h-9 w-full rounded-md border border-input bg-transparent pl-3 py-1 pr-1 gap-1 text-sm shadow-sm transition-colors hover:cursor-pointer",
+		base: "flex min-h-9! w-full rounded-md border border-input bg-transparent pl-3 py-1 pr-1 gap-1 text-sm shadow-sm transition-colors hover:cursor-pointer",
 		focus: "outline-none ring-1 ring-ring",
 		disabled: "cursor-not-allowed opacity-50",
 	},
@@ -44,7 +44,7 @@ const selectStyles = {
 	groupHeadingStyles:
 		"py-2 px-1 text-secondary-foreground text-sm font-semibold",
 	optionStyles: {
-		base: "hover:cursor-pointer hover:bg-accent hover:text-accent-foreground px-2 py-1.5 rounded-sm !text-sm !cursor-default !select-none !outline-none font-sans",
+		base: "hover:cursor-pointer hover:bg-accent hover:text-accent-foreground px-2 py-1.5 rounded-sm text-sm! cursor-default! select-none! outline-none! font-sans",
 		focus: "active:bg-accent/90 bg-accent text-accent-foreground",
 		disabled: "pointer-events-none opacity-50",
 		selected: "",
@@ -156,7 +156,7 @@ export const defaultStyles: StylesConfig<
 	control: (base) => ({
 		...base,
 		transition: "none",
-		// minHeight: '2.25rem', // we used !min-h-9 instead
+		// minHeight: '2.25rem', // we used min-h-9! instead
 	}),
 	menuList: (base) => ({
 		...base,
@@ -239,13 +239,14 @@ export const MenuList = (props: MenuListProps<OptionType>) => {
 	}
 	return (
 		<List
-			height={height}
-			itemCount={childrenArray.length}
-			itemSize={35} // Adjust item height if different
-			width="100%"
-		>
-			{({ index, style }) => <div style={style}>{childrenArray[index]}</div>}
-		</List>
+			style={{ height, width: "100%" }}
+			rowCount={childrenArray.length}
+			rowHeight={35}
+			rowProps={{}}
+			rowComponent={({ index, style }) => (
+				<div style={style}>{childrenArray[index]}</div>
+			)}
+		/>
 	);
 };
 

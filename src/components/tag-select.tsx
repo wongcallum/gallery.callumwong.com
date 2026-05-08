@@ -1,5 +1,4 @@
 import type { Ref } from "react";
-import type { DateRange } from "react-day-picker";
 import type {
 	ActionMeta,
 	GroupBase,
@@ -9,12 +8,6 @@ import type {
 import { useDebouncedCallback } from "use-debounce";
 import { api } from "~/trpc/react";
 import { AsyncSelectComponent, type OptionType } from "./react-select";
-
-interface Filter {
-	camera?: number;
-	lens?: number;
-	date?: DateRange;
-}
 
 interface TagSelectProps {
 	value?: number[];

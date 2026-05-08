@@ -25,6 +25,7 @@ export default function Collections() {
 						.map((collection) => (
 							<div className="relative aspect-3/2" key={collection.id}>
 								<Link href={`/collections/${collection.id}`}>
+									{/* biome-ignore lint/performance/noImgElement: S3 images managed externally */}
 									<img
 										className="h-full w-full rounded-md object-cover"
 										src={collection.thumbnailPhotoURL || "/frown.svg"}

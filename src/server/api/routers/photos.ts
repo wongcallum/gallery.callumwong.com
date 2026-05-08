@@ -1,7 +1,6 @@
 import { PutObjectCommand, S3ServiceException } from "@aws-sdk/client-s3";
 import { TRPCError } from "@trpc/server";
 import {
-	type SQL,
 	and,
 	count,
 	desc,
@@ -10,6 +9,7 @@ import {
 	gte,
 	inArray,
 	lte,
+	type SQL,
 	sql,
 } from "drizzle-orm";
 import exifr from "exifr";
@@ -94,6 +94,7 @@ export const photoRouter = createTRPCRouter({
 				.transform((fd) => Object.fromEntries(fd.entries()))
 				.transform((obj) => ({
 					...obj,
+					exif: String(obj.exif) === "true",
 					tags: obj.tags ? JSON.parse(obj.tags.toString()) : [],
 				}))
 				.pipe(importPhotoSchema),
@@ -102,7 +103,7 @@ export const photoRouter = createTRPCRouter({
 			const image = await input.image.arrayBuffer();
 
 			const collectionId = input.collection
-				? Number.parseInt(input.collection)
+				? Number.parseInt(input.collection, 10)
 				: null;
 
 			const collection = collectionId
@@ -374,7 +375,9 @@ export const photoRouter = createTRPCRouter({
 		.mutation(async ({ ctx, input }) => {
 			await ctx.db.transaction(async (tx) => {
 				const collectionId =
-					input.collection === "" ? null : Number.parseInt(input.collection);
+					input.collection === ""
+						? null
+						: Number.parseInt(input.collection, 10);
 
 				await tx
 					.update(photos)

@@ -179,7 +179,12 @@ function CollectionDialog({
 								<FormItem className="grid grid-cols-4 items-center gap-4">
 									<FormLabel>Priority</FormLabel>
 									<FormControl>
-										<Input type="number" className="col-span-3" {...field} />
+										<Input
+											type="number"
+											className="col-span-3"
+											{...field}
+											onChange={(e) => field.onChange(e.target.valueAsNumber)}
+										/>
 									</FormControl>
 									<FormMessage />
 								</FormItem>

@@ -9,7 +9,7 @@ export default function CollectionPage() {
 	const params = useParams<{ id: string }>();
 
 	const { isPending, error, data } = api.collections.withPhotos.useQuery(
-		Number.parseInt(params.id),
+		Number.parseInt(params.id, 10),
 	);
 
 	if (isPending) {

@@ -13,7 +13,9 @@ import { DeleteCollectionDialog } from "./delete-collection-dialog";
 
 export function CollectionTableActions({
 	collection,
-}: { collection: Collection }) {
+}: {
+	collection: Collection;
+}) {
 	const [editOpen, setEditOpen] = useState(false);
 	const [deleteOpen, setDeleteOpen] = useState(false);
 

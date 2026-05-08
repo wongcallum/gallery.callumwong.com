@@ -50,8 +50,9 @@ export default function Gallery({ photos }: { photos: PhotosOutput }) {
 					container: ({ ref, ...rest }) => (
 						<div ref={ref} {...rest} className={`${rest.className} py-4`} />
 					),
-					// biome-ignore lint/a11y/useAltText: already defined in props
 					image: (props) => (
+						// biome-ignore lint/a11y/useAltText: alt passed via spread props
+						// biome-ignore lint/performance/noImgElement: managed by react-photo-album
 						<img {...props} className={`${props.className} rounded-md`} />
 					),
 				}}
@@ -113,6 +114,7 @@ export default function Gallery({ photos }: { photos: PhotosOutput }) {
 				render={{
 					slide: ({ slide }) => {
 						return (
+							// biome-ignore lint/performance/noImgElement: managed by lightbox
 							<img
 								src={slide.src}
 								alt={slide.alt}

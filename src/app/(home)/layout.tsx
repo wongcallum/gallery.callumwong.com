@@ -1,8 +1,8 @@
 "use client";
 
-import { SessionProvider } from "next-auth/react";
 import Link from "next/link";
 import { useSelectedLayoutSegment } from "next/navigation";
+import { SessionProvider } from "next-auth/react";
 import type React from "react";
 import { useEffect } from "react";
 import { SidebarProvider } from "~/components/ui/sidebar";

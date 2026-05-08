@@ -9,10 +9,11 @@ import { Button } from "~/components/ui/button";
 import {
 	Dialog,
 	DialogContent,
+	DialogFooter,
+	DialogHeader,
 	DialogTitle,
 	DialogTrigger,
 } from "~/components/ui/dialog";
-import { DialogFooter, DialogHeader } from "~/components/ui/dialog";
 import {
 	Form,
 	FormControl,
@@ -29,14 +30,13 @@ export function EditPhotoButton() {
 	const { currentSlide } = useLightboxState();
 	const id = currentSlide?.src.split("/").at(-1);
 
-	if (!id) return <IconButton label="Edit" icon={Pencil} disabled />;
-
 	const formSchema = editPhotoSchema.omit({ id: true });
 
 	const utils = api.useUtils();
-	const existingPhoto = api.photos.withTags.useQuery(id);
+	const existingPhoto = api.photos.withTags.useQuery(id ?? "", {
+		enabled: !!id,
+	});
 	const collections = api.collections.all.useQuery();
-	const tags = api.tags.all.useQuery();
 	const mutation = api.photos.edit.useMutation({
 		async onSuccess() {
 			await utils.collections.withPhotos.invalidate();
@@ -44,12 +44,6 @@ export function EditPhotoButton() {
 			await existingPhoto.refetch();
 		},
 	});
-
-	const options =
-		tags.data?.map((tag) => ({
-			value: tag.id,
-			label: tag.name,
-		})) || [];
 
 	const [open, setOpen] = useState(false);
 
@@ -64,6 +58,8 @@ export function EditPhotoButton() {
 			tags: existingPhoto.data?.photosToTags.map((val) => val.tagId) || [],
 		},
 	});
+
+	if (!id) return <IconButton label="Edit" icon={Pencil} disabled />;
 
 	const onSubmit = async (values: z.infer<typeof formSchema>) => {
 		const newValues = Object.assign(values, { id });

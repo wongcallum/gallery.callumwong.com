@@ -6,7 +6,7 @@ import { useCallback, useEffect, useState } from "react";
 import { useDropzone } from "react-dropzone";
 import { useForm } from "react-hook-form";
 import type { z } from "zod";
-import { Combobox } from "~/components/combobox";
+import { CollectionSelect } from "~/components/collection-select";
 import { TagSelect } from "~/components/tag-select";
 import { Alert, AlertDescription, AlertTitle } from "~/components/ui/alert";
 import { Button } from "~/components/ui/button";
@@ -29,7 +29,6 @@ type FileWithPreview = File & {
 
 export default function ImportPage() {
 	const mutation = api.photos.create.useMutation();
-	const collections = api.collections.all.useQuery();
 
 	const clientSchema = importPhotoSchema.omit({ image: true });
 	const form = useForm<z.infer<typeof clientSchema>>({
@@ -186,17 +185,10 @@ export default function ImportPage() {
 						render={({ field }) => (
 							<FormItem className="flex items-center">
 								<FormLabel>Add to collection:</FormLabel>
-								<Combobox
-									id="collection"
-									options={
-										collections.data?.map((collection) => ({
-											value: collection.id.toString(),
-											label: collection.name,
-										})) || []
-									}
+								<CollectionSelect
+									value={field.value || undefined}
+									onChange={(val) => form.setValue("collection", val ?? "")}
 									placeholder="None"
-									value={field.value}
-									setValue={(value) => form.setValue("collection", value)}
 								/>
 								<FormMessage />
 							</FormItem>

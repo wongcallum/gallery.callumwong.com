@@ -4,7 +4,7 @@ import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { IconButton, useLightboxState } from "yet-another-react-lightbox";
 import type z from "zod";
-import { Combobox } from "~/components/combobox";
+import { CollectionSelect } from "~/components/collection-select";
 import { Button } from "~/components/ui/button";
 import {
 	Dialog,
@@ -36,7 +36,6 @@ export function EditPhotoButton() {
 	const existingPhoto = api.photos.withTags.useQuery(id ?? "", {
 		enabled: !!id,
 	});
-	const collections = api.collections.all.useQuery();
 	const mutation = api.photos.edit.useMutation({
 		async onSuccess() {
 			await utils.collections.withPhotos.invalidate();
@@ -87,17 +86,10 @@ export function EditPhotoButton() {
 							render={({ field }) => (
 								<FormItem className="flex items-center">
 									<FormLabel>Collection:</FormLabel>
-									<Combobox
-										id="collection"
-										options={
-											collections.data?.map((collection) => ({
-												value: collection.id.toString(),
-												label: collection.name,
-											})) || []
-										}
+									<CollectionSelect
+										value={field.value || undefined}
+										onChange={(val) => form.setValue("collection", val ?? "")}
 										placeholder="None"
-										value={field.value}
-										setValue={(value) => form.setValue("collection", value)}
 									/>
 									<FormMessage />
 								</FormItem>

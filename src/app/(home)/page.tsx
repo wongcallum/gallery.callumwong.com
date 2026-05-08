@@ -34,7 +34,7 @@ import { api, type RouterOutputs } from "~/trpc/react";
 import "react-photo-album/rows.css";
 import "yet-another-react-lightbox/plugins/captions.css";
 import "yet-another-react-lightbox/styles.css";
-import { CollectionSelect } from "./_components/collection-select";
+import { CollectionSelect } from "~/components/collection-select";
 import TagsFilter from "./_components/tags-filter";
 
 type SearchOutput = RouterOutputs["photos"]["searchPaginated"];

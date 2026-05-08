@@ -6,16 +6,21 @@ import { api } from "~/trpc/react";
 interface CollectionSelectProps {
 	value: string | undefined;
 	onChange: (value: string | undefined) => void;
+	placeholder?: string;
 }
 
-export function CollectionSelect({ value, onChange }: CollectionSelectProps) {
+export function CollectionSelect({
+	value,
+	onChange,
+	placeholder = "All collections",
+}: CollectionSelectProps) {
 	const collections = api.collections.all.useQuery();
 
 	return (
 		<Combobox
 			value={value}
 			setValue={(val) => onChange(val || undefined)}
-			placeholder="All collections"
+			placeholder={placeholder}
 			options={
 				collections.data?.map((c) => ({
 					value: c.id.toString(),

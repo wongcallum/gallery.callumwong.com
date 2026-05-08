@@ -60,6 +60,7 @@ export function TagSelect({ value, onChange, ref }: TagSelectProps) {
 			value={value !== undefined ? selectedTags : undefined}
 			ref={ref}
 			onChange={onChange}
+			placeholder="Select tags..."
 		/>
 	);
 }

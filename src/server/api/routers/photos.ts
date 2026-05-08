@@ -76,6 +76,7 @@ async function insertOrSelectCamera(
 
 const filterInput = z.object({
 	tags: z.array(z.number()),
+	collection: z.number().optional().nullable(),
 	camera: z.number().optional().nullable(),
 	lens: z.number().optional().nullable(),
 	date: z
@@ -239,6 +240,8 @@ export const photoRouter = createTRPCRouter({
 
 	count: publicProcedure.input(filterInput).query(async ({ ctx, input }) => {
 		const filters: SQL[] = [];
+		if (input.collection)
+			filters.push(eq(photos.collectionId, input.collection));
 		if (input.camera) filters.push(eq(photos.cameraId, input.camera));
 		if (input.lens) filters.push(eq(photos.lensId, input.lens));
 		if (input.date?.from && input.date?.to) {
@@ -281,6 +284,8 @@ export const photoRouter = createTRPCRouter({
 		)
 		.query(async ({ ctx, input }) => {
 			const filters: SQL[] = [];
+			if (input.collection)
+				filters.push(eq(photos.collectionId, input.collection));
 			if (input.camera) filters.push(eq(photos.cameraId, input.camera));
 			if (input.lens) filters.push(eq(photos.lensId, input.lens));
 			if (input.date?.from && input.date?.to) {
@@ -319,14 +324,14 @@ export const photoRouter = createTRPCRouter({
 				.from(photos)
 				.innerJoin(photosToTags, eq(photos.id, photosToTags.photoId))
 				.innerJoin(tags, eq(photosToTags.tagId, tags.id))
+				.leftJoin(cameras, eq(photos.cameraId, cameras.id))
+				.leftJoin(lenses, eq(photos.lensId, lenses.id))
 				.where(and(inArray(tags.id, input.tags), ...filters))
+				.groupBy(photos.id, cameras.name, lenses.name)
 				.having(({ tagCount }) => eq(tagCount, input.tags.length))
-				.groupBy(photos.id)
 				.orderBy(desc(photos.takenAt))
 				.limit(input.pageSize)
-				.offset(input.pageSize * (input.page - 1))
-				.leftJoin(cameras, eq(photos.cameraId, cameras.id))
-				.leftJoin(lenses, eq(photos.lensId, lenses.id));
+				.offset(input.pageSize * (input.page - 1));
 		}),
 
 	withTags: protectedProcedure

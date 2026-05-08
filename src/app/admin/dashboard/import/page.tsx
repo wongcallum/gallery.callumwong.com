@@ -30,16 +30,10 @@ type FileWithPreview = File & {
 export default function ImportPage() {
 	const mutation = api.photos.create.useMutation();
 	const collections = api.collections.all.useQuery();
-	const tags = api.tags.all.useQuery();
 
-	const _options =
-		tags.data?.map((tag) => ({
-			value: tag.id,
-			label: tag.name,
-		})) || [];
-
-	const form = useForm<z.infer<typeof importPhotoSchema>>({
-		resolver: zodResolver(importPhotoSchema),
+	const clientSchema = importPhotoSchema.omit({ image: true });
+	const form = useForm<z.infer<typeof clientSchema>>({
+		resolver: zodResolver(clientSchema),
 		defaultValues: {
 			exif: true,
 			collection: "",
@@ -81,7 +75,7 @@ export default function ImportPage() {
 		multiple: true,
 	});
 
-	async function onSubmit(data: z.infer<typeof importPhotoSchema>) {
+	async function onSubmit(data: z.infer<typeof clientSchema>) {
 		for (const image of images) {
 			const fd = new FormData();
 

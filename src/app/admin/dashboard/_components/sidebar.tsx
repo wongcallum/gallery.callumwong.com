@@ -27,10 +27,6 @@ const items = [
 		title: "Import",
 		url: "/admin/dashboard/import",
 	},
-	{
-		title: "Storage",
-		url: "/admin/dashboard/storage",
-	},
 ];
 
 export function DashboardSidebar() {

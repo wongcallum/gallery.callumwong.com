@@ -241,11 +241,11 @@ export default function HomePage() {
 										className="relative aspect-3/2 cursor-pointer overflow-hidden rounded-md"
 										onClick={() => setCollection(c.id)}
 									>
-										{c.thumbnailPhotoURL ? (
+										{c.displayThumbnailURL ? (
 											/* biome-ignore lint/performance/noImgElement: S3 images managed externally */
 											<img
 												className="h-full w-full object-cover"
-												src={c.thumbnailPhotoURL}
+												src={c.displayThumbnailURL}
 												alt={`Thumbnail for ${c.name}`}
 											/>
 										) : (

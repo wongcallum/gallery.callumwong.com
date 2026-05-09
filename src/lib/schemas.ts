@@ -11,6 +11,7 @@ export const createCollectionSchema = z.object({
 	name: z.string().min(1),
 	description: z.string().optional(),
 	priority: z.number(),
+	thumbnailPhotoURL: z.string().nullish(),
 });
 
 export const createTagSchema = z.object({

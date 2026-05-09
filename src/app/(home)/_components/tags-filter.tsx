@@ -17,6 +17,7 @@ interface TagsFilterProps {
 	date: DateRange | undefined;
 	setDate: (value: DateRange | undefined) => void;
 	onClearAll?: () => void;
+	showFilters?: boolean;
 }
 
 export default function TagsFilter({
@@ -29,6 +30,7 @@ export default function TagsFilter({
 	date,
 	setDate,
 	onClearAll,
+	showFilters = true,
 }: TagsFilterProps) {
 	const camerasQuery = api.filter.cameras.useQuery();
 	const lensesQuery = api.filter.lens.useQuery();
@@ -47,39 +49,41 @@ export default function TagsFilter({
 					</Label>
 				</div>
 			</SidebarGroup>
-			<SidebarGroup>
-				<SidebarGroupLabel>Filter</SidebarGroupLabel>
-				<div className="flex flex-col gap-2">
-					<Combobox
-						value={camera?.toString()}
-						setValue={setCamera}
-						placeholder="All cameras"
-						options={
-							camerasQuery.data?.map((camera) => ({
-								value: camera.id.toString(),
-								label: camera.name,
-							})) || []
-						}
-					/>
-					<Combobox
-						value={lens?.toString()}
-						setValue={setLens}
-						placeholder="All lenses"
-						options={
-							lensesQuery.data?.map((lens) => ({
-								value: lens.id.toString(),
-								label: lens.name,
-							})) || []
-						}
-					/>
-					<DatePickerWithRange date={date} setDate={setDate} />
-					{onClearAll && (
-						<Button variant="ghost" size="sm" onClick={onClearAll}>
-							Clear all
-						</Button>
-					)}
-				</div>
-			</SidebarGroup>
+			{showFilters && (
+				<SidebarGroup>
+					<SidebarGroupLabel>Filter</SidebarGroupLabel>
+					<div className="flex flex-col gap-2">
+						<Combobox
+							value={camera?.toString()}
+							setValue={setCamera}
+							placeholder="All cameras"
+							options={
+								camerasQuery.data?.map((camera) => ({
+									value: camera.id.toString(),
+									label: camera.name,
+								})) || []
+							}
+						/>
+						<Combobox
+							value={lens?.toString()}
+							setValue={setLens}
+							placeholder="All lenses"
+							options={
+								lensesQuery.data?.map((lens) => ({
+									value: lens.id.toString(),
+									label: lens.name,
+								})) || []
+							}
+						/>
+						<DatePickerWithRange date={date} setDate={setDate} />
+						{onClearAll && (
+							<Button variant="ghost" size="sm" onClick={onClearAll}>
+								Clear all
+							</Button>
+						)}
+					</div>
+				</SidebarGroup>
+			)}
 		</>
 	);
 }

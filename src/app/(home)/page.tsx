@@ -171,6 +171,7 @@ export default function HomePage() {
 							)
 						}
 						onClearAll={handleClearAll}
+						showFilters={!collectionsMode || collection != null}
 					/>
 				</SidebarContent>
 			</Sidebar>

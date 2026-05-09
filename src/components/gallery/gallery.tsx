@@ -1,13 +1,13 @@
 "use client";
 
 import { Aperture, Camera, Film, Ruler, Timer, View } from "lucide-react";
-import { useSession } from "next-auth/react";
 import { useState } from "react";
 import { RowsPhotoAlbum } from "react-photo-album";
 import { Lightbox } from "yet-another-react-lightbox";
 import Captions from "yet-another-react-lightbox/plugins/captions";
 import Fullscreen from "yet-another-react-lightbox/plugins/fullscreen";
 import Zoom from "yet-another-react-lightbox/plugins/zoom";
+import { authClient } from "~/lib/auth-client";
 import { apertureString, shutterSpeedString } from "~/lib/utils";
 import { AdminPlugin } from "./lightbox-admin-plugin";
 
@@ -23,7 +23,7 @@ type PhotosOutput = (InferSelectModel<typeof photos> & {
 })[];
 
 export default function Gallery({ photos }: { photos: PhotosOutput }) {
-	const { data: session } = useSession();
+	const { data: session } = authClient.useSession();
 
 	const [index, setIndex] = useState(-1);
 

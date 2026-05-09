@@ -7,12 +7,10 @@ export const env = createEnv({
 	 * isn't built with invalid env vars.
 	 */
 	server: {
-		AUTH_SECRET:
-			process.env.NODE_ENV === "production"
-				? z.string()
-				: z.string().optional(),
-		AUTH_GITHUB_ID: z.string(),
-		AUTH_GITHUB_SECRET: z.string(),
+		BETTER_AUTH_SECRET: z.string(),
+		BETTER_AUTH_URL: z.string().url(),
+		GITHUB_CLIENT_ID: z.string(),
+		GITHUB_CLIENT_SECRET: z.string(),
 		DATABASE_URL: z.string().url(),
 		AWS_ACCESS_KEY_ID: z.string(),
 		AWS_SECRET_ACCESS_KEY: z.string(),
@@ -38,9 +36,10 @@ export const env = createEnv({
 	 * middlewares) or client-side so we need to destruct manually.
 	 */
 	runtimeEnv: {
-		AUTH_SECRET: process.env.AUTH_SECRET,
-		AUTH_GITHUB_ID: process.env.AUTH_GITHUB_ID,
-		AUTH_GITHUB_SECRET: process.env.AUTH_GITHUB_SECRET,
+		BETTER_AUTH_SECRET: process.env.BETTER_AUTH_SECRET,
+		BETTER_AUTH_URL: process.env.BETTER_AUTH_URL,
+		GITHUB_CLIENT_ID: process.env.GITHUB_CLIENT_ID,
+		GITHUB_CLIENT_SECRET: process.env.GITHUB_CLIENT_SECRET,
 		DATABASE_URL: process.env.DATABASE_URL,
 		AWS_ACCESS_KEY_ID: process.env.AWS_ACCESS_KEY_ID,
 		AWS_SECRET_ACCESS_KEY: process.env.AWS_SECRET_ACCESS_KEY,

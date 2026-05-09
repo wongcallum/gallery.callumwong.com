@@ -1,3 +1,5 @@
+import { headers } from "next/headers";
+import { redirect } from "next/navigation";
 import type React from "react";
 import { Separator } from "~/components/ui/separator";
 import {
@@ -5,14 +7,19 @@ import {
 	SidebarProvider,
 	SidebarTrigger,
 } from "~/components/ui/sidebar";
-import { auth, signIn } from "~/server/auth";
+import { auth } from "~/server/auth";
 import { DashboardSidebar } from "./_components/sidebar";
 
 export default async function DashboardLayout({
 	children,
 }: Readonly<{ children: React.ReactNode }>) {
-	const session = await auth();
-	if (!session) await signIn();
+	const session = await auth.api.getSession({
+		headers: await headers(),
+	});
+
+	if (!session) {
+		redirect("/admin/login");
+	}
 
 	return (
 		<SidebarProvider>
@@ -26,7 +33,7 @@ export default async function DashboardLayout({
 							className="mx-2 data-[orientation=vertical]:h-4"
 						/>
 						<h1 className="font-medium text-base">
-							Welcome, {session?.user.email}
+							Welcome, {session.user.email}
 						</h1>
 					</div>
 				</header>

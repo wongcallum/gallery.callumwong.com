@@ -1,13 +1,30 @@
-# TODO
+# gallery.callumwong.com
 
-## Medium Priority
+Personal gallery project
 
-- quick modify collections
-- <https://docs.aws.amazon.com/lambda/latest/dg/with-s3-tutorial.html#with-s3-tutorial-create-function-package>
+## Features
 
-## Low Priority
+- Photos belong to only one collection
+- Photos can have many tags
+- EXIF metadata extraction
+- Filtering by tags
+- Filtering by metadata
 
-- whitelisting users, creating users, etc
-- sorting in both views
-- move some settings from env to database
-- maybe edit order of collections or group collections
+## Stack
+
+- Next.js 16
+- Tailwind CSS + shadcn
+- tRPC + TanStack Query
+- Postgres + Drizzle ORM
+- S3 storage
+- Better Auth (SSO)
+
+## Run
+
+```sh
+pnpm i
+cp .env.example .env
+pnpm db:push
+pnpm dev
+```
+

@@ -1,23 +1,13 @@
 import { relations } from "drizzle-orm";
-import { index, pgTableCreator, primaryKey } from "drizzle-orm/pg-core";
+import { pgTable as createTable, index, primaryKey } from "drizzle-orm/pg-core";
 import type { AdapterAccount } from "next-auth/adapters";
-
-/**
- * This is an example of how to use the multi-project schema feature of Drizzle ORM. Use the same
- * database instance for multiple projects.
- *
- * @see https://orm.drizzle.team/docs/goodies#multi-project-schema
- */
-export const createTable = pgTableCreator(
-	(name) => `gallery.callumwong.com_${name}`,
-);
 
 export const collections = createTable("collection", (d) => ({
 	id: d.serial().primaryKey(),
 	createdById: d
 		.text()
 		.notNull()
-		.references(() => users.id),
+		.references(() => user.id),
 	name: d.text().notNull(),
 	description: d.text().default("").notNull(),
 	thumbnailPhotoURL: d.text(),

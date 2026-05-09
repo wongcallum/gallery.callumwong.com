@@ -12,7 +12,7 @@
 	},
 	"files": {
 		"ignoreUnknown": false,
-		"includes": ["**", "!supabase", "!src/components/ui/*.tsx"]
+		"includes": ["**", "!src/components/ui/*.tsx"]
 	},
 	"formatter": { "enabled": true },
 	"assist": { "actions": { "source": { "organizeImports": "on" } } },

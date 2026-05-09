@@ -119,10 +119,9 @@ export default function HomePage() {
 		prevFiltersRef.current = { tags, collection, camera, lens, date };
 	}, [tags, collection, camera, lens, date, page, setPage]);
 
-	// biome-ignore lint/correctness/useExhaustiveDependencies: fetchPhotos already includes all filter dependencies
 	useEffect(() => {
 		fetchPhotos();
-	}, [tags, collection, camera, lens, date, page, collectionsMode]);
+	}, [fetchPhotos]);
 
 	const selectedCollection = collection
 		? collections.data?.find((c) => c.id === collection)
@@ -292,19 +291,16 @@ export default function HomePage() {
 											onClick={() => setPage(page > 1 ? page - 1 : 1)}
 										/>
 									</PaginationItem>
-									{Array(Math.ceil(countData / PAGE_SIZE))
-										.fill(null)
-										.map((_value, index) => (
-											// biome-ignore lint/suspicious/noArrayIndexKey: pagination items have no stable id
-											<PaginationItem key={index}>
-												<PaginationLink
-													href="#"
-													onClick={() => setPage(index + 1)}
-												>
-													{index + 1}
-												</PaginationLink>
-											</PaginationItem>
-										))}
+									{Array.from(
+										{ length: Math.ceil(countData / PAGE_SIZE) },
+										(_, i) => i + 1,
+									).map((pageNum) => (
+										<PaginationItem key={pageNum}>
+											<PaginationLink href="#" onClick={() => setPage(pageNum)}>
+												{pageNum}
+											</PaginationLink>
+										</PaginationItem>
+									))}
 									<PaginationItem>
 										<PaginationNext
 											href="#"

@@ -50,10 +50,13 @@ export default function Gallery({ photos }: { photos: PhotosOutput }) {
 					container: ({ ref, ...rest }) => (
 						<div ref={ref} {...rest} className={`${rest.className} py-4`} />
 					),
-					image: (props) => (
-						// biome-ignore lint/a11y/useAltText: alt passed via spread props
+					image: ({ alt, ...props }) => (
 						// biome-ignore lint/performance/noImgElement: managed by react-photo-album
-						<img {...props} className={`${props.className} rounded-md`} />
+						<img
+							alt={alt}
+							{...props}
+							className={`${props.className} rounded-md`}
+						/>
 					),
 				}}
 			/>

@@ -1,7 +1,6 @@
 import type { DateRange } from "react-day-picker";
 import { Combobox } from "~/components/combobox";
 import { DatePickerWithRange } from "~/components/date-range-picker";
-import { Badge } from "~/components/ui/badge";
 import { Button } from "~/components/ui/button";
 import { Checkbox } from "~/components/ui/checkbox";
 import { Label } from "~/components/ui/label";
@@ -17,7 +16,6 @@ interface TagsFilterProps {
 	setLens: (value: string | undefined) => void;
 	date: DateRange | undefined;
 	setDate: (value: DateRange | undefined) => void;
-	onTagClick?: (tagId: number) => void;
 	onClearAll?: () => void;
 }
 
@@ -30,17 +28,10 @@ export default function TagsFilter({
 	setLens,
 	date,
 	setDate,
-	onTagClick,
 	onClearAll,
 }: TagsFilterProps) {
 	const camerasQuery = api.filter.cameras.useQuery();
 	const lensesQuery = api.filter.lens.useQuery();
-	const tagsWithCount = api.tags.withCount.useQuery();
-
-	const popularTags = tagsWithCount.data
-		?.filter((t) => t.photoCount > 0)
-		.sort((a, b) => b.photoCount - a.photoCount)
-		.slice(0, 15);
 
 	return (
 		<>
@@ -89,26 +80,6 @@ export default function TagsFilter({
 					)}
 				</div>
 			</SidebarGroup>
-			{popularTags && popularTags.length > 0 && (
-				<SidebarGroup>
-					<SidebarGroupLabel>Popular Tags</SidebarGroupLabel>
-					<div className="flex flex-wrap gap-1.5 px-2">
-						{popularTags.map((tag) => (
-							<Badge
-								key={tag.id}
-								variant="secondary"
-								className="cursor-pointer hover:bg-secondary/80"
-								onClick={() => onTagClick?.(tag.id)}
-							>
-								{tag.name}
-								<span className="ml-1 text-muted-foreground">
-									{tag.photoCount}
-								</span>
-							</Badge>
-						))}
-					</div>
-				</SidebarGroup>
-			)}
 		</>
 	);
 }

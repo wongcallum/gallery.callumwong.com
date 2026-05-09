@@ -132,12 +132,6 @@ export default function HomePage() {
 		c.name.toLowerCase().includes(search.toLowerCase()),
 	);
 
-	const handleTagClick = (tagId: number) => {
-		if (!tags.includes(tagId)) {
-			setTags([...tags, tagId]);
-		}
-	};
-
 	const handleClearAll = () => {
 		setCamera(null);
 		setLens(null);
@@ -176,7 +170,6 @@ export default function HomePage() {
 									: { from: null, to: null },
 							)
 						}
-						onTagClick={handleTagClick}
 						onClearAll={handleClearAll}
 					/>
 				</SidebarContent>

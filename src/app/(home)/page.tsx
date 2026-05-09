@@ -241,12 +241,18 @@ export default function HomePage() {
 										className="relative aspect-3/2 cursor-pointer overflow-hidden rounded-md"
 										onClick={() => setCollection(c.id)}
 									>
-										{/* biome-ignore lint/performance/noImgElement: S3 images managed externally */}
-										<img
-											className="h-full w-full object-cover"
-											src={c.thumbnailPhotoURL || "/frown.svg"}
-											alt={`Thumbnail for ${c.name}`}
-										/>
+										{c.thumbnailPhotoURL ? (
+											/* biome-ignore lint/performance/noImgElement: S3 images managed externally */
+											<img
+												className="h-full w-full object-cover"
+												src={c.thumbnailPhotoURL}
+												alt={`Thumbnail for ${c.name}`}
+											/>
+										) : (
+											<span className="flex h-full w-full items-center justify-center">
+												No thumbnail
+											</span>
+										)}
 										<div className="absolute right-0 bottom-0 left-0 flex items-end justify-between bg-black/60 p-2 text-white">
 											<span className="pr-2 font-semibold">{c.name}</span>
 											<span title={`${c.photoCount} photos`}>

@@ -1,4 +1,4 @@
-import type { DateRange } from "react-day-picker";
+import type { DateRange } from "@daypicker/react";
 import { Combobox } from "~/components/combobox";
 import { DatePickerWithRange } from "~/components/date-range-picker";
 import { Button } from "~/components/ui/button";

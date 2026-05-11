@@ -64,9 +64,12 @@ export default function HomePage() {
 
 	const prevCollectionRef = useRef(collection);
 	useEffect(() => {
-		if (prevCollectionRef.current !== collection && page !== 1) {
-			setPage(1);
+		if (prevCollectionRef.current !== collection) {
+			if (page !== 1) setPage(1);
+			setSearchData(undefined);
+			setCountData(undefined);
 		}
+
 		prevCollectionRef.current = collection;
 	}, [collection, page, setPage]);
 

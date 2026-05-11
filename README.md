@@ -4,11 +4,8 @@ Personal gallery project
 
 ## Features
 
-- Photos belong to only one collection
-- Photos can have many tags
+- Photos belong to a collection
 - EXIF metadata extraction
-- Filtering by tags
-- Filtering by metadata
 
 ## Stack
 

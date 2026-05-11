@@ -2,15 +2,12 @@ import { PutObjectCommand, S3ServiceException } from "@aws-sdk/client-s3";
 import { TRPCError } from "@trpc/server";
 import {
 	and,
-	count,
 	desc,
 	eq,
 	getTableColumns,
 	gte,
-	inArray,
 	lte,
 	type SQL,
-	sql,
 } from "drizzle-orm";
 import exifr from "exifr";
 import sharp from "sharp";
@@ -24,13 +21,7 @@ import {
 	publicProcedure,
 } from "~/server/api/trpc";
 import { db } from "~/server/db";
-import {
-	cameras,
-	lenses,
-	photos,
-	photosToTags,
-	tags,
-} from "~/server/db/schema";
+import { cameras, lenses, photos } from "~/server/db/schema";
 
 async function insertOrSelectLens(
 	model: string,
@@ -75,7 +66,6 @@ async function insertOrSelectCamera(
 }
 
 const filterInput = z.object({
-	tags: z.array(z.number()),
 	collection: z.number().optional().nullable(),
 	camera: z.number().optional().nullable(),
 	lens: z.number().optional().nullable(),
@@ -96,7 +86,6 @@ export const photoRouter = createTRPCRouter({
 				.transform((obj) => ({
 					...obj,
 					exif: String(obj.exif) === "true",
-					tags: obj.tags ? JSON.parse(obj.tags.toString()) : [],
 				}))
 				.pipe(importPhotoSchema),
 		)
@@ -187,18 +176,7 @@ export const photoRouter = createTRPCRouter({
 				newPhoto.focalLength = exif.FocalLength;
 			}
 
-			await ctx.db.transaction(async (tx) => {
-				await tx.insert(photos).values(newPhoto);
-
-				if (input.tags.length > 0) {
-					await tx.insert(photosToTags).values(
-						input.tags.map((tagId) => ({
-							photoId: id,
-							tagId,
-						})),
-					);
-				}
-			});
+			await ctx.db.insert(photos).values(newPhoto);
 
 			// upload images
 			try {
@@ -254,25 +232,7 @@ export const photoRouter = createTRPCRouter({
 			);
 		}
 
-		if (input.tags.length === 0) {
-			return await ctx.db.$count(photos, and(...filters));
-		}
-
-		const matchingPhotos = ctx.db
-			.select({
-				photoId: photos.id,
-			})
-			.from(photos)
-			.innerJoin(photosToTags, eq(photos.id, photosToTags.photoId))
-			.innerJoin(tags, eq(photosToTags.tagId, tags.id))
-			.where(and(inArray(tags.id, input.tags), ...filters))
-			.groupBy(photos.id)
-			.having(sql`count(${tags.id}) = ${input.tags.length}`)
-			.as("matching_photos");
-
-		const total = await ctx.db.select({ total: count() }).from(matchingPhotos);
-
-		return total[0]?.total || 0;
+		return await ctx.db.$count(photos, and(...filters));
 	}),
 
 	searchPaginated: publicProcedure
@@ -298,52 +258,26 @@ export const photoRouter = createTRPCRouter({
 				);
 			}
 
-			if (!input.tags || input.tags.length === 0) {
-				return await ctx.db
-					.select({
-						...getTableColumns(photos),
-						cameraName: cameras.name,
-						lensName: lenses.name,
-					})
-					.from(photos)
-					.where(and(...filters))
-					.orderBy(desc(photos.takenAt))
-					.limit(input.pageSize)
-					.offset(input.pageSize * (input.page - 1))
-					.leftJoin(cameras, eq(photos.cameraId, cameras.id))
-					.leftJoin(lenses, eq(photos.lensId, lenses.id));
-			}
-
 			return await ctx.db
 				.select({
 					...getTableColumns(photos),
-					tagCount: sql<number>`cast(count(${tags.id}) as int)`,
 					cameraName: cameras.name,
 					lensName: lenses.name,
 				})
 				.from(photos)
-				.innerJoin(photosToTags, eq(photos.id, photosToTags.photoId))
-				.innerJoin(tags, eq(photosToTags.tagId, tags.id))
-				.leftJoin(cameras, eq(photos.cameraId, cameras.id))
-				.leftJoin(lenses, eq(photos.lensId, lenses.id))
-				.where(and(inArray(tags.id, input.tags), ...filters))
-				.groupBy(photos.id, cameras.name, lenses.name)
-				.having(({ tagCount }) => eq(tagCount, input.tags.length))
+				.where(and(...filters))
 				.orderBy(desc(photos.takenAt))
 				.limit(input.pageSize)
-				.offset(input.pageSize * (input.page - 1));
+				.offset(input.pageSize * (input.page - 1))
+				.leftJoin(cameras, eq(photos.cameraId, cameras.id))
+				.leftJoin(lenses, eq(photos.lensId, lenses.id));
 		}),
 
-	withTags: protectedProcedure
-		.input(z.string())
-		.query(async ({ ctx, input }) => {
-			return await ctx.db.query.photos.findFirst({
-				where: eq(photos.id, input),
-				with: {
-					photosToTags: true,
-				},
-			});
-		}),
+	byId: protectedProcedure.input(z.string()).query(async ({ ctx, input }) => {
+		return await ctx.db.query.photos.findFirst({
+			where: eq(photos.id, input),
+		});
+	}),
 
 	getLatestInCollection: publicProcedure
 		.input(
@@ -378,42 +312,12 @@ export const photoRouter = createTRPCRouter({
 	edit: protectedProcedure
 		.input(editPhotoSchema)
 		.mutation(async ({ ctx, input }) => {
-			await ctx.db.transaction(async (tx) => {
-				const collectionId =
-					input.collection === ""
-						? null
-						: Number.parseInt(input.collection, 10);
+			const collectionId =
+				input.collection === "" ? null : Number.parseInt(input.collection, 10);
 
-				await tx
-					.update(photos)
-					.set({
-						collectionId,
-					})
-					.where(eq(photos.id, input.id));
-
-				const existingTags = await tx
-					.select({ tagId: photosToTags.tagId })
-					.from(photosToTags)
-					.where(eq(photosToTags.photoId, input.id));
-				const existingTagIds = existingTags.map((t) => t.tagId);
-				const tagsUnchanged =
-					existingTagIds.length === input.tags.length &&
-					existingTagIds.every((id) => input.tags.includes(id));
-
-				if (!tagsUnchanged) {
-					await tx
-						.delete(photosToTags)
-						.where(eq(photosToTags.photoId, input.id));
-
-					if (input.tags.length > 0) {
-						await tx.insert(photosToTags).values(
-							input.tags.map((tagId) => ({
-								photoId: input.id,
-								tagId,
-							})),
-						);
-					}
-				}
-			});
+			await ctx.db
+				.update(photos)
+				.set({ collectionId })
+				.where(eq(photos.id, input.id));
 		}),
 });

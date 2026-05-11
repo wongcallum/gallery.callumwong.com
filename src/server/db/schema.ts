@@ -1,5 +1,5 @@
 import { relations } from "drizzle-orm";
-import { pgTable as createTable, index, primaryKey } from "drizzle-orm/pg-core";
+import { pgTable as createTable, index } from "drizzle-orm/pg-core";
 
 export const collections = createTable("collection", (d) => ({
 	id: d.serial().primaryKey(),
@@ -67,12 +67,11 @@ export const photos = createTable(
 	],
 );
 
-export const photosRelations = relations(photos, ({ one, many }) => ({
+export const photosRelations = relations(photos, ({ one }) => ({
 	collection: one(collections, {
 		fields: [photos.collectionId],
 		references: [collections.id],
 	}),
-	photosToTags: many(photosToTags),
 	camera: one(cameras, {
 		fields: [photos.cameraId],
 		references: [cameras.id],
@@ -93,51 +92,6 @@ export const lenses = createTable("lens", (d) => ({
 	id: d.serial().primaryKey(),
 	// serial: d.integer().unique().notNull(),
 	name: d.text().notNull().unique(),
-}));
-
-export const tags = createTable("tag", (d) => ({
-	id: d.serial().primaryKey(),
-	name: d.text().unique().notNull(),
-	createdAt: d.timestamp().defaultNow().notNull(),
-	lastUpdatedAt: d
-		.timestamp()
-		.defaultNow()
-		.$onUpdate(() => new Date())
-		.notNull(),
-}));
-
-export const tagsRelations = relations(tags, ({ many }) => ({
-	photosToTags: many(photosToTags),
-}));
-
-export const photosToTags = createTable(
-	"photos_to_tags",
-	(d) => ({
-		photoId: d
-			.text()
-			.notNull()
-			.references(() => photos.id, {
-				onDelete: "cascade",
-			}),
-		tagId: d
-			.integer()
-			.notNull()
-			.references(() => tags.id, {
-				onDelete: "cascade",
-			}),
-	}),
-	(t) => [primaryKey({ columns: [t.photoId, t.tagId] })],
-);
-
-export const photosToTagsRelations = relations(photosToTags, ({ one }) => ({
-	tag: one(tags, {
-		fields: [photosToTags.tagId],
-		references: [tags.id],
-	}),
-	photo: one(photos, {
-		fields: [photosToTags.photoId],
-		references: [photos.id],
-	}),
 }));
 
 export const user = createTable("user", (d) => ({

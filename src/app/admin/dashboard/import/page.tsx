@@ -7,7 +7,6 @@ import { useDropzone } from "react-dropzone";
 import { useForm } from "react-hook-form";
 import type { z } from "zod";
 import { CollectionSelect } from "~/components/collection-select";
-import { TagSelect } from "~/components/tag-select";
 import { Alert, AlertDescription, AlertTitle } from "~/components/ui/alert";
 import { Button } from "~/components/ui/button";
 import { Checkbox } from "~/components/ui/checkbox";
@@ -36,7 +35,6 @@ export default function ImportPage() {
 		defaultValues: {
 			exif: true,
 			collection: "",
-			tags: [],
 		},
 	});
 
@@ -79,7 +77,6 @@ export default function ImportPage() {
 			const fd = new FormData();
 
 			fd.append("collection", data.collection);
-			fd.append("tags", JSON.stringify(data.tags));
 			fd.append("exif", data.exif.toString());
 			fd.append("image", image);
 
@@ -190,22 +187,6 @@ export default function ImportPage() {
 									onChange={(val) => form.setValue("collection", val ?? "")}
 									placeholder="None"
 								/>
-								<FormMessage />
-							</FormItem>
-						)}
-					/>
-					<FormField
-						control={form.control}
-						name="tags"
-						render={({ field }) => (
-							<FormItem className="flex items-center">
-								<FormLabel>Apply tags:</FormLabel>
-								<FormControl>
-									<TagSelect
-										ref={field.ref}
-										onChange={(val) => field.onChange(val.map((c) => c.value))}
-									/>
-								</FormControl>
 								<FormMessage />
 							</FormItem>
 						)}

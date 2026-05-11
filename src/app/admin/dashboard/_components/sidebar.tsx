@@ -20,10 +20,6 @@ const items = [
 		url: "/admin/dashboard/collections",
 	},
 	{
-		title: "Tags",
-		url: "/admin/dashboard/tags",
-	},
-	{
 		title: "Import",
 		url: "/admin/dashboard/import",
 	},

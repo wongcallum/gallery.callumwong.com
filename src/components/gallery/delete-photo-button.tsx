@@ -26,7 +26,6 @@ export function DeletePhotoButton() {
 			async onSuccess() {
 				await utils.collections.withPhotos.invalidate();
 				await utils.collections.all.invalidate();
-				await utils.tags.invalidate();
 				setOpen(false);
 			},
 		});

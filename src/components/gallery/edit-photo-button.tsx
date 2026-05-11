@@ -16,7 +16,6 @@ import {
 } from "~/components/ui/dialog";
 import {
 	Form,
-	FormControl,
 	FormField,
 	FormItem,
 	FormLabel,
@@ -24,7 +23,6 @@ import {
 } from "~/components/ui/form";
 import { editPhotoSchema } from "~/lib/schemas";
 import { api } from "~/trpc/react";
-import { TagSelect } from "../tag-select";
 
 export function EditPhotoButton() {
 	const { currentSlide } = useLightboxState();
@@ -33,7 +31,7 @@ export function EditPhotoButton() {
 	const formSchema = editPhotoSchema.omit({ id: true });
 
 	const utils = api.useUtils();
-	const existingPhoto = api.photos.withTags.useQuery(id ?? "", {
+	const existingPhoto = api.photos.byId.useQuery(id ?? "", {
 		enabled: !!id,
 	});
 	const mutation = api.photos.edit.useMutation({
@@ -50,11 +48,9 @@ export function EditPhotoButton() {
 		resolver: zodResolver(formSchema),
 		defaultValues: {
 			collection: "",
-			tags: [],
 		},
 		values: {
 			collection: existingPhoto?.data?.collectionId?.toString() || "",
-			tags: existingPhoto.data?.photosToTags.map((val) => val.tagId) || [],
 		},
 	});
 
@@ -91,24 +87,6 @@ export function EditPhotoButton() {
 										onChange={(val) => form.setValue("collection", val ?? "")}
 										placeholder="None"
 									/>
-									<FormMessage />
-								</FormItem>
-							)}
-						/>
-						<FormField
-							control={form.control}
-							name="tags"
-							render={({ field }) => (
-								<FormItem className="flex items-center">
-									<FormLabel>Tags:</FormLabel>
-									<FormControl>
-										<TagSelect
-											ref={field.ref}
-											onChange={(val) =>
-												field.onChange(val.map((c) => c.value))
-											}
-										/>
-									</FormControl>
 									<FormMessage />
 								</FormItem>
 							)}

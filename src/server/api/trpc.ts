@@ -7,10 +7,10 @@
  * need to use are documented accordingly near the end.
  */
 
-import { TRPCError, initTRPC } from "@trpc/server";
+import { initTRPC, TRPCError } from "@trpc/server";
+import { headers } from "next/headers";
 import superjson from "superjson";
 import { ZodError } from "zod";
-
 import { auth } from "~/server/auth";
 import { db } from "~/server/db";
 
@@ -27,7 +27,9 @@ import { db } from "~/server/db";
  * @see https://trpc.io/docs/server/context
  */
 export const createTRPCContext = async (opts: { headers: Headers }) => {
-	const session = await auth();
+	const session = await auth.api.getSession({
+		headers: await headers(),
+	});
 
 	return {
 		db,

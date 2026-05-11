@@ -1,4 +1,4 @@
-import { type PluginProps, addToolbarButton } from "yet-another-react-lightbox";
+import { addToolbarButton, type PluginProps } from "yet-another-react-lightbox";
 
 import { DeletePhotoButton } from "./delete-photo-button";
 import { EditPhotoButton } from "./edit-photo-button";

@@ -31,6 +31,7 @@ export const collectionRouter = createTRPCRouter({
 				name: input.name,
 				description: input.description,
 				priority: input.priority,
+				thumbnailPhotoURL: input.thumbnailPhotoURL ?? undefined,
 				createdById: ctx.session.user.id,
 			});
 		}),
@@ -48,9 +49,21 @@ export const collectionRouter = createTRPCRouter({
 					name: input.name,
 					description: input.description,
 					priority: input.priority,
+					thumbnailPhotoURL: input.thumbnailPhotoURL ?? null,
 				})
 				.where(eq(collections.id, input.id));
 		}),
+
+	photos: protectedProcedure.input(z.number()).query(async ({ ctx, input }) => {
+		return ctx.db
+			.select({
+				id: photos.id,
+				thumbnailUrl: photos.thumbnailUrl,
+			})
+			.from(photos)
+			.where(eq(photos.collectionId, input))
+			.orderBy(desc(photos.takenAt));
+	}),
 
 	delete: protectedProcedure
 		.input(
@@ -94,13 +107,13 @@ export const collectionRouter = createTRPCRouter({
 			.groupBy(collections.id)
 			.orderBy(desc(collections.priority));
 
-		for (const collection of allCollections) {
-			if (!collection.thumbnailPhotoURL) {
-				collection.thumbnailPhotoURL = await getLatestPhoto(collection.id);
-			}
-		}
-
-		return allCollections;
+		return Promise.all(
+			allCollections.map(async (collection) => ({
+				...collection,
+				displayThumbnailURL:
+					collection.thumbnailPhotoURL ?? (await getLatestPhoto(collection.id)),
+			})),
+		);
 	}),
 
 	withPhotos: publicProcedure

@@ -6,8 +6,7 @@ import { useCallback, useEffect, useState } from "react";
 import { useDropzone } from "react-dropzone";
 import { useForm } from "react-hook-form";
 import type { z } from "zod";
-import { Combobox } from "~/components/combobox";
-import { TagSelect } from "~/components/tag-select";
+import { CollectionSelect } from "~/components/collection-select";
 import { Alert, AlertDescription, AlertTitle } from "~/components/ui/alert";
 import { Button } from "~/components/ui/button";
 import { Checkbox } from "~/components/ui/checkbox";
@@ -29,21 +28,13 @@ type FileWithPreview = File & {
 
 export default function ImportPage() {
 	const mutation = api.photos.create.useMutation();
-	const collections = api.collections.all.useQuery();
-	const tags = api.tags.all.useQuery();
 
-	const options =
-		tags.data?.map((tag) => ({
-			value: tag.id,
-			label: tag.name,
-		})) || [];
-
-	const form = useForm<z.infer<typeof importPhotoSchema>>({
-		resolver: zodResolver(importPhotoSchema),
+	const clientSchema = importPhotoSchema.omit({ image: true });
+	const form = useForm<z.infer<typeof clientSchema>>({
+		resolver: zodResolver(clientSchema),
 		defaultValues: {
 			exif: true,
 			collection: "",
-			tags: [],
 		},
 	});
 
@@ -81,12 +72,11 @@ export default function ImportPage() {
 		multiple: true,
 	});
 
-	async function onSubmit(data: z.infer<typeof importPhotoSchema>) {
+	async function onSubmit(data: z.infer<typeof clientSchema>) {
 		for (const image of images) {
 			const fd = new FormData();
 
 			fd.append("collection", data.collection);
-			fd.append("tags", JSON.stringify(data.tags));
 			fd.append("exif", data.exif.toString());
 			fd.append("image", image);
 
@@ -130,7 +120,7 @@ export default function ImportPage() {
 				<ImageUpIcon className="h-12 w-12 fill-primary/75" />
 				<div className="mt-4 mb-2">Drag & drop here or click to select</div>
 				<span
-					className={cn("-translate-x-1/2 absolute bottom-2 left-1/2 text-xs", {
+					className={cn("absolute bottom-2 left-1/2 -translate-x-1/2 text-xs", {
 						"text-destructive": isDragReject || fileRejections.length > 0,
 						"text-muted-foreground":
 							!isDragReject && !(fileRejections.length > 0),
@@ -145,6 +135,7 @@ export default function ImportPage() {
 						key={file.preview}
 						className="flex flex-col items-center text-center"
 					>
+						{/* biome-ignore lint/performance/noImgElement: preview of local file blob */}
 						<img src={file.preview} alt={file.name} className="rounded-md" />
 						<p className="my-1 text-sm">{file.name}</p>
 						<p className="mb-1 text-muted-foreground text-xs">
@@ -191,34 +182,11 @@ export default function ImportPage() {
 						render={({ field }) => (
 							<FormItem className="flex items-center">
 								<FormLabel>Add to collection:</FormLabel>
-								<Combobox
-									id="collection"
-									options={
-										collections.data?.map((collection) => ({
-											value: collection.id.toString(),
-											label: collection.name,
-										})) || []
-									}
+								<CollectionSelect
+									value={field.value || undefined}
+									onChange={(val) => form.setValue("collection", val ?? "")}
 									placeholder="None"
-									value={field.value}
-									setValue={(value) => form.setValue("collection", value)}
 								/>
-								<FormMessage />
-							</FormItem>
-						)}
-					/>
-					<FormField
-						control={form.control}
-						name="tags"
-						render={({ field }) => (
-							<FormItem className="flex items-center">
-								<FormLabel>Apply tags:</FormLabel>
-								<FormControl>
-									<TagSelect
-										ref={field.ref}
-										onChange={(val) => field.onChange(val.map((c) => c.value))}
-									/>
-								</FormControl>
 								<FormMessage />
 							</FormItem>
 						)}

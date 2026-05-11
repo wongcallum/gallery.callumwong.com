@@ -1,2 +1,3 @@
-onlyBuiltDependencies:
-  - supabase
+allowBuilds:
+  esbuild: true
+  sharp: true

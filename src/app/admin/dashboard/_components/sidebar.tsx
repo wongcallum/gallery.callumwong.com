@@ -1,4 +1,6 @@
-import { signOut } from "~/server/auth";
+"use client";
+
+import { authClient } from "~/lib/auth-client";
 import { Button } from "../../../../components/ui/button";
 import {
 	Sidebar,
@@ -18,20 +20,12 @@ const items = [
 		url: "/admin/dashboard/collections",
 	},
 	{
-		title: "Tags",
-		url: "/admin/dashboard/tags",
-	},
-	{
 		title: "Import",
 		url: "/admin/dashboard/import",
 	},
-	{
-		title: "Storage",
-		url: "/admin/dashboard/storage",
-	},
 ];
 
-export async function DashboardSidebar() {
+export function DashboardSidebar() {
 	return (
 		<Sidebar>
 			<SidebarContent>
@@ -53,16 +47,20 @@ export async function DashboardSidebar() {
 				</SidebarGroup>
 			</SidebarContent>
 			<SidebarFooter>
-				<form
-					action={async () => {
-						"use server";
-						await signOut();
+				<Button
+					className="w-full"
+					onClick={async () => {
+						await authClient.signOut({
+							fetchOptions: {
+								onSuccess: () => {
+									window.location.href = "/admin/login";
+								},
+							},
+						});
 					}}
 				>
-					<Button type="submit" className="w-full">
-						Sign Out
-					</Button>
-				</form>
+					Sign Out
+				</Button>
 			</SidebarFooter>
 		</Sidebar>
 	);

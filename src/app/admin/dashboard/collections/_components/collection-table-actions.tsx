@@ -13,7 +13,9 @@ import { DeleteCollectionDialog } from "./delete-collection-dialog";
 
 export function CollectionTableActions({
 	collection,
-}: { collection: Collection }) {
+}: {
+	collection: Collection;
+}) {
 	const [editOpen, setEditOpen] = useState(false);
 	const [deleteOpen, setDeleteOpen] = useState(false);
 
@@ -41,6 +43,7 @@ export function CollectionTableActions({
 				name={collection.name}
 				description={collection.description}
 				priority={collection.priority}
+				thumbnailPhotoURL={collection.thumbnailPhotoURL}
 				open={editOpen}
 				setOpen={setEditOpen}
 			/>

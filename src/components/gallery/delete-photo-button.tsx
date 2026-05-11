@@ -5,29 +5,27 @@ import { Button } from "~/components/ui/button";
 import {
 	Dialog,
 	DialogContent,
+	DialogFooter,
+	DialogHeader,
 	DialogTitle,
 	DialogTrigger,
 } from "~/components/ui/dialog";
-import { DialogFooter, DialogHeader } from "~/components/ui/dialog";
 import { api } from "~/trpc/react";
 
 export function DeletePhotoButton() {
 	const { currentSlide } = useLightboxState();
 	const id = currentSlide?.src.split("/").at(-1);
-
-	if (!id) return <IconButton label="Delete" icon={Trash} disabled />;
-
 	const utils = api.useUtils();
 	const mutation = api.photos.delete.useMutation();
-
 	const [open, setOpen] = useState(false);
+
+	if (!id) return <IconButton label="Delete" icon={Trash} disabled />;
 
 	const onDelete = async () => {
 		mutation.mutateAsync(id, {
 			async onSuccess() {
 				await utils.collections.withPhotos.invalidate();
 				await utils.collections.all.invalidate();
-				await utils.tags.invalidate();
 				setOpen(false);
 			},
 		});

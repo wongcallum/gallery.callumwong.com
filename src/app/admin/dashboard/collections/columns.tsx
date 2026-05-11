@@ -10,6 +10,7 @@ export type Collection = {
 	description: string;
 	photoCount: number;
 	priority: number;
+	thumbnailPhotoURL: string | null;
 };
 
 export const columns: CollectionColumnDef<Collection>[] = [

@@ -4,6 +4,7 @@ import type { Metadata } from "next";
 
 import { NuqsAdapter } from "nuqs/adapters/next/app";
 import { ThemeProvider } from "~/components/theme-provider";
+import { TooltipProvider } from "~/components/ui/tooltip";
 import { TRPCReactProvider } from "~/trpc/react";
 
 export const metadata: Metadata = {
@@ -25,7 +26,9 @@ export default function RootLayout({
 					disableTransitionOnChange
 				>
 					<NuqsAdapter>
-						<TRPCReactProvider>{children}</TRPCReactProvider>
+						<TRPCReactProvider>
+							<TooltipProvider>{children}</TooltipProvider>
+						</TRPCReactProvider>
 					</NuqsAdapter>
 				</ThemeProvider>
 			</body>

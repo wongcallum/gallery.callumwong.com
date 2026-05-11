@@ -122,7 +122,7 @@ export default function HomePage() {
 			)}
 
 			{collection == null ? (
-				<div className="grid grid-flow-row grid-cols-1 gap-4 lg:grid-cols-2 2xl:grid-cols-3">
+				<div className="grid grid-flow-row grid-cols-1 gap-4 sm:grid-cols-2 2xl:grid-cols-3">
 					{filteredCollections ? (
 						filteredCollections.length > 0 ? (
 							filteredCollections.map((c) => (
@@ -168,7 +168,20 @@ export default function HomePage() {
 							</div>
 						)
 					) : (
-						<Skeleton className="aspect-3/2 h-50 rounded-xl" />
+						<div className="flex flex-col gap-3">
+							{!selectedCollection && (
+								<>
+									<Skeleton className="h-6 w-30 rounded-md" />
+									<Skeleton className="h-4 w-40 rounded-md" />
+								</>
+							)}
+							<div className="grid grid-cols-1 gap-4 md:grid-cols-2 2xl:grid-cols-4">
+								{Array.from({ length: 6 }, (_, i) => (
+									// biome-ignore lint/suspicious/noArrayIndexKey: this is literally just a skeleton bro
+									<Skeleton key={i} className="aspect-3/2 rounded-md" />
+								))}
+							</div>
+						</div>
 					)}
 
 					{countData ? (
@@ -204,9 +217,7 @@ export default function HomePage() {
 										href="#"
 										onClick={(e) => {
 											e.preventDefault();
-											setPage(
-												page < countData / PAGE_SIZE ? page + 1 : page,
-											);
+											setPage(page < countData / PAGE_SIZE ? page + 1 : page);
 										}}
 									/>
 								</PaginationItem>

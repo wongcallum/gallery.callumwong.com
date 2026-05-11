@@ -174,7 +174,10 @@ export default function HomePage() {
 								<PaginationItem>
 									<PaginationPrevious
 										href="#"
-										onClick={() => setPage(page > 1 ? page - 1 : 1)}
+										onClick={(e) => {
+											e.preventDefault();
+											setPage(page > 1 ? page - 1 : 1);
+										}}
 									/>
 								</PaginationItem>
 								{Array(Math.ceil(countData / PAGE_SIZE))
@@ -184,7 +187,10 @@ export default function HomePage() {
 										<PaginationItem key={index}>
 											<PaginationLink
 												href="#"
-												onClick={() => setPage(index + 1)}
+												onClick={(e) => {
+													e.preventDefault();
+													setPage(index + 1);
+												}}
 											>
 												{index + 1}
 											</PaginationLink>
@@ -193,9 +199,12 @@ export default function HomePage() {
 								<PaginationItem>
 									<PaginationNext
 										href="#"
-										onClick={() =>
-											setPage(page < countData / PAGE_SIZE ? page + 1 : page)
-										}
+										onClick={(e) => {
+											e.preventDefault();
+											setPage(
+												page < countData / PAGE_SIZE ? page + 1 : page,
+											);
+										}}
 									/>
 								</PaginationItem>
 							</PaginationContent>

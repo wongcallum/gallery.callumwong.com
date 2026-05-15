@@ -3,7 +3,7 @@ name: Build and publish Docker image
 on:
   push:
     branches:
-      - ci
+      - master
     tags:
       - "v[0-9]+.[0-9]+.[0-9]+"
 

@@ -42,7 +42,6 @@ export function CollectionTableActions({
 				id={collection.id}
 				name={collection.name}
 				description={collection.description}
-				priority={collection.priority}
 				thumbnailPhotoURL={collection.thumbnailPhotoURL}
 				open={editOpen}
 				setOpen={setEditOpen}

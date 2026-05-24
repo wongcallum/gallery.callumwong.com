@@ -1,6 +1,7 @@
 import { TRPCError } from "@trpc/server";
-import { count, desc, eq, getTableColumns } from "drizzle-orm";
+import { asc, count, desc, eq, getTableColumns, inArray } from "drizzle-orm";
 import { z } from "zod";
+import { computeNewOrder, MAX_ORDER } from "~/lib/ordering";
 import { deletePhoto } from "~/lib/s3";
 import { createCollectionSchema } from "~/lib/schemas";
 
@@ -27,12 +28,30 @@ export const collectionRouter = createTRPCRouter({
 	create: protectedProcedure
 		.input(createCollectionSchema)
 		.mutation(async ({ ctx, input }) => {
+			const [first] = await ctx.db
+				.select({ displayOrder: collections.displayOrder })
+				.from(collections)
+				.orderBy(asc(collections.displayOrder))
+				.limit(1);
+
+			const displayOrder =
+				first?.displayOrder != null
+					? Math.floor(first.displayOrder / 2)
+					: Math.floor(MAX_ORDER / 2);
+
+			if (first?.displayOrder != null && displayOrder === 0) {
+				throw new TRPCError({
+					code: "INTERNAL_SERVER_ERROR",
+					message: "Not enough space in collection ordering!",
+				});
+			}
+
 			await ctx.db.insert(collections).values({
 				name: input.name,
 				description: input.description,
-				priority: input.priority,
 				thumbnailPhotoURL: input.thumbnailPhotoURL ?? undefined,
 				createdById: ctx.session.user.id,
+				displayOrder,
 			});
 		}),
 
@@ -48,10 +67,64 @@ export const collectionRouter = createTRPCRouter({
 				.set({
 					name: input.name,
 					description: input.description,
-					priority: input.priority,
 					thumbnailPhotoURL: input.thumbnailPhotoURL ?? null,
 				})
 				.where(eq(collections.id, input.id));
+		}),
+
+	reorder: protectedProcedure
+		.input(
+			z.object({
+				id: z.number(),
+				beforeId: z.number().nullable(),
+				afterId: z.number().nullable(),
+			}),
+		)
+		.mutation(async ({ ctx, input }) => {
+			await ctx.db.transaction(async (tx) => {
+				const rows = await tx
+					.select({
+						id: collections.id,
+						displayOrder: collections.displayOrder,
+					})
+					.from(collections)
+					.orderBy(asc(collections.displayOrder), asc(collections.id));
+
+				if (rows.some((r) => r.displayOrder === null)) {
+					const step = Math.floor(MAX_ORDER / (rows.length + 1));
+					for (let i = 0; i < rows.length; i++) {
+						const row = rows[i];
+						if (!row || row.displayOrder !== null) continue;
+						await tx
+							.update(collections)
+							.set({ displayOrder: step * (i + 1) })
+							.where(eq(collections.id, row.id));
+					}
+				}
+
+				const ids = [input.beforeId, input.afterId].filter(
+					(v): v is number => v !== null,
+				);
+				const neighbors = ids.length
+					? await tx
+							.select({
+								id: collections.id,
+								displayOrder: collections.displayOrder,
+							})
+							.from(collections)
+							.where(inArray(collections.id, ids))
+					: [];
+				const before = neighbors.find((n) => n.id === input.beforeId);
+				const after = neighbors.find((n) => n.id === input.afterId);
+				const newOrder = computeNewOrder(
+					before?.displayOrder ?? null,
+					after?.displayOrder ?? null,
+				);
+				await tx
+					.update(collections)
+					.set({ displayOrder: newOrder })
+					.where(eq(collections.id, input.id));
+			});
 		}),
 
 	photos: protectedProcedure.input(z.number()).query(async ({ ctx, input }) => {
@@ -105,7 +178,7 @@ export const collectionRouter = createTRPCRouter({
 			.from(collections)
 			.leftJoin(photos, eq(collections.id, photos.collectionId))
 			.groupBy(collections.id)
-			.orderBy(desc(collections.priority));
+			.orderBy(asc(collections.displayOrder), asc(collections.id));
 
 		return Promise.all(
 			allCollections.map(async (collection) => ({

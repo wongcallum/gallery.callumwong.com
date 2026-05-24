@@ -81,28 +81,50 @@ export const collectionRouter = createTRPCRouter({
 			}),
 		)
 		.mutation(async ({ ctx, input }) => {
-			const ids = [input.beforeId, input.afterId].filter(
-				(v): v is number => v !== null,
-			);
-			const neighbors = ids.length
-				? await ctx.db
-						.select({
-							id: collections.id,
-							displayOrder: collections.displayOrder,
-						})
-						.from(collections)
-						.where(inArray(collections.id, ids))
-				: [];
-			const before = neighbors.find((n) => n.id === input.beforeId);
-			const after = neighbors.find((n) => n.id === input.afterId);
-			const newOrder = computeNewOrder(
-				before?.displayOrder ?? null,
-				after?.displayOrder ?? null,
-			);
-			await ctx.db
-				.update(collections)
-				.set({ displayOrder: newOrder })
-				.where(eq(collections.id, input.id));
+			await ctx.db.transaction(async (tx) => {
+				const rows = await tx
+					.select({
+						id: collections.id,
+						displayOrder: collections.displayOrder,
+					})
+					.from(collections)
+					.orderBy(asc(collections.displayOrder), asc(collections.id));
+
+				if (rows.some((r) => r.displayOrder === null)) {
+					const step = Math.floor(MAX_ORDER / (rows.length + 1));
+					for (let i = 0; i < rows.length; i++) {
+						const row = rows[i];
+						if (!row || row.displayOrder !== null) continue;
+						await tx
+							.update(collections)
+							.set({ displayOrder: step * (i + 1) })
+							.where(eq(collections.id, row.id));
+					}
+				}
+
+				const ids = [input.beforeId, input.afterId].filter(
+					(v): v is number => v !== null,
+				);
+				const neighbors = ids.length
+					? await tx
+							.select({
+								id: collections.id,
+								displayOrder: collections.displayOrder,
+							})
+							.from(collections)
+							.where(inArray(collections.id, ids))
+					: [];
+				const before = neighbors.find((n) => n.id === input.beforeId);
+				const after = neighbors.find((n) => n.id === input.afterId);
+				const newOrder = computeNewOrder(
+					before?.displayOrder ?? null,
+					after?.displayOrder ?? null,
+				);
+				await tx
+					.update(collections)
+					.set({ displayOrder: newOrder })
+					.where(eq(collections.id, input.id));
+			});
 		}),
 
 	photos: protectedProcedure.input(z.number()).query(async ({ ctx, input }) => {
@@ -156,7 +178,7 @@ export const collectionRouter = createTRPCRouter({
 			.from(collections)
 			.leftJoin(photos, eq(collections.id, photos.collectionId))
 			.groupBy(collections.id)
-			.orderBy(asc(collections.displayOrder));
+			.orderBy(asc(collections.displayOrder), asc(collections.id));
 
 		return Promise.all(
 			allCollections.map(async (collection) => ({

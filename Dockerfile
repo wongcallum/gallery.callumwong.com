@@ -40,17 +40,6 @@ RUN if [ -f package-lock.json ]; then \
     echo "No lockfile found." && exit 1; \
   fi
 
-# Migrate
-
-FROM node:${NODE_VERSION} AS migrator
-WORKDIR /app
-COPY --from=dependencies /app/node_modules ./node_modules
-COPY . .
-
-ENV SKIP_ENV_VALIDATION=1
-
-CMD ["node_modules/.bin/drizzle-kit", "push", "--force"]
-
 # Run
 
 FROM node:${NODE_VERSION} AS runner
@@ -67,6 +56,7 @@ RUN chown node:node .next
 
 COPY --from=builder --chown=node:node /app/.next/standalone ./
 COPY --from=builder --chown=node:node /app/.next/static ./.next/static
+COPY --from=builder --chown=node:node /app/drizzle ./drizzle
 # COPY --from=builder --chown=node:node /app/.next/cache ./.next/cache
 
 USER node

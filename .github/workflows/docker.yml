@@ -44,16 +44,6 @@ jobs:
             type=ref,event=branch
             type=sha
 
-      - name: Extract metadata (migrator)
-        id: meta-migrator
-        uses: docker/metadata-action@v5
-        with:
-          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}-migrator
-          tags: |
-            type=semver,pattern={{version}}
-            type=ref,event=branch
-            type=sha
-
       - name: Build and push image (app)
         id: push
         uses: docker/build-push-action@v6
@@ -65,28 +55,9 @@ jobs:
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
-      - name: Build and push image (migrator)
-        id: push-migrator
-        uses: docker/build-push-action@v6
-        with:
-          context: .
-          target: migrator
-          push: true
-          tags: ${{ steps.meta-migrator.outputs.tags }}
-          labels: ${{ steps.meta-migrator.outputs.labels }}
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
-
       - name: Generate artifact attestation (app)
         uses: actions/attest-build-provenance@v2
         with:
           subject-name: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
           subject-digest: ${{ steps.push.outputs.digest }}
-          push-to-registry: true
-
-      - name: Generate artifact attestation (migrator)
-        uses: actions/attest-build-provenance@v2
-        with:
-          subject-name: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}-migrator
-          subject-digest: ${{ steps.push-migrator.outputs.digest }}
           push-to-registry: true

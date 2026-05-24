@@ -1,23 +1,27 @@
 import { relations } from "drizzle-orm";
 import { pgTable as createTable, index } from "drizzle-orm/pg-core";
 
-export const collections = createTable("collection", (d) => ({
-	id: d.serial().primaryKey(),
-	createdById: d
-		.text()
-		.notNull()
-		.references(() => user.id),
-	name: d.text().notNull(),
-	description: d.text().default("").notNull(),
-	thumbnailPhotoURL: d.text(),
-	createdAt: d.timestamp().defaultNow().notNull(),
-	lastUpdatedAt: d
-		.timestamp()
-		.defaultNow()
-		.$onUpdate(() => new Date())
-		.notNull(),
-	priority: d.integer().default(0).notNull(),
-}));
+export const collections = createTable(
+	"collection",
+	(d) => ({
+		id: d.serial().primaryKey(),
+		createdById: d
+			.text()
+			.notNull()
+			.references(() => user.id),
+		name: d.text().notNull(),
+		description: d.text().default("").notNull(),
+		thumbnailPhotoURL: d.text(),
+		createdAt: d.timestamp().defaultNow().notNull(),
+		lastUpdatedAt: d
+			.timestamp()
+			.defaultNow()
+			.$onUpdate(() => new Date())
+			.notNull(),
+		displayOrder: d.integer("display_order"),
+	}),
+	(t) => [index("collection_display_order_idx").on(t.displayOrder)],
+);
 
 export const collectionsRelations = relations(collections, ({ one, many }) => ({
 	createdBy: one(user, {

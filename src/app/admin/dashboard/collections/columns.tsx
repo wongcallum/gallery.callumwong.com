@@ -9,11 +9,15 @@ export type Collection = {
 	name: string;
 	description: string;
 	photoCount: number;
-	priority: number;
 	thumbnailPhotoURL: string | null;
 };
 
 export const columns: CollectionColumnDef<Collection>[] = [
+	{
+		id: "drag",
+		header: "",
+		size: 32,
+	},
 	{
 		accessorKey: "name",
 		header: ({ column }) => (
@@ -28,12 +32,6 @@ export const columns: CollectionColumnDef<Collection>[] = [
 		accessorKey: "photoCount",
 		header: ({ column }) => (
 			<DataTableColumnHeader column={column} title="Photos" />
-		),
-	},
-	{
-		accessorKey: "priority",
-		header: ({ column }) => (
-			<DataTableColumnHeader column={column} title="Priority" />
 		),
 	},
 	{

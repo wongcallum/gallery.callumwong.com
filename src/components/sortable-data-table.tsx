@@ -134,37 +134,37 @@ export function SortableDataTable<
 				/>
 				{children}
 			</div>
-			<div className="rounded-md border">
-				<Table>
-					<TableHeader>
-						{table.getHeaderGroups().map((headerGroup) => (
-							<TableRow key={headerGroup.id}>
-								{headerGroup.headers.map((header) => (
-									<TableHead
-										key={header.id}
-										style={{ width: header.getSize() }}
-									>
-										{header.isPlaceholder
-											? null
-											: flexRender(
-													header.column.columnDef.header,
-													header.getContext(),
-												)}
-									</TableHead>
-								))}
-							</TableRow>
-						))}
-					</TableHeader>
-					<DndContext
-						sensors={sensors}
-						collisionDetection={closestCenter}
-						onDragEnd={handleDragEnd}
-					>
-						<SortableContext
-							items={rowIds}
-							strategy={verticalListSortingStrategy}
-						>
-							<TableBody>
+			<DndContext
+				sensors={sensors}
+				collisionDetection={closestCenter}
+				onDragEnd={handleDragEnd}
+			>
+				<div className="rounded-md border">
+					<Table>
+						<TableHeader>
+							{table.getHeaderGroups().map((headerGroup) => (
+								<TableRow key={headerGroup.id}>
+									{headerGroup.headers.map((header) => (
+										<TableHead
+											key={header.id}
+											style={{ width: header.getSize() }}
+										>
+											{header.isPlaceholder
+												? null
+												: flexRender(
+														header.column.columnDef.header,
+														header.getContext(),
+													)}
+										</TableHead>
+									))}
+								</TableRow>
+							))}
+						</TableHeader>
+						<TableBody>
+							<SortableContext
+								items={rowIds}
+								strategy={verticalListSortingStrategy}
+							>
 								{rows.length ? (
 									rows.map((row) => <SortableRow key={row.id} row={row} />)
 								) : (
@@ -177,11 +177,11 @@ export function SortableDataTable<
 										</TableCell>
 									</TableRow>
 								)}
-							</TableBody>
-						</SortableContext>
-					</DndContext>
-				</Table>
-			</div>
+							</SortableContext>
+						</TableBody>
+					</Table>
+				</div>
+			</DndContext>
 			<DataTablePagination table={table} />
 		</div>
 	);

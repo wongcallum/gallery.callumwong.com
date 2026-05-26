@@ -2,7 +2,6 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { Check, X } from "lucide-react";
 import { useMemo, useState } from "react";
 import { type UseFormReturn, useForm } from "react-hook-form";
-import slugify from "slugify";
 import type z from "zod";
 import { Button } from "~/components/ui/button";
 import {
@@ -22,7 +21,7 @@ import {
 } from "~/components/ui/form";
 import { Input } from "~/components/ui/input";
 import { createCollectionSchema } from "~/lib/schemas";
-import { cn } from "~/lib/utils";
+import { cn, slugify } from "~/lib/utils";
 import { api } from "~/trpc/react";
 
 type CollectionFormData = z.infer<typeof createCollectionSchema>;

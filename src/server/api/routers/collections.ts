@@ -1,10 +1,10 @@
 import { TRPCError } from "@trpc/server";
 import { asc, count, desc, eq, getTableColumns, inArray } from "drizzle-orm";
-import slugify from "slugify";
 import { z } from "zod";
 import { computeNewOrder, MAX_ORDER } from "~/lib/ordering";
 import { deletePhoto } from "~/lib/s3";
 import { createCollectionSchema } from "~/lib/schemas";
+import { slugify } from "~/lib/utils";
 
 import {
 	createTRPCRouter,
@@ -194,38 +194,22 @@ export const collectionRouter = createTRPCRouter({
 
 	bySlug: publicProcedure.input(z.string()).query(async ({ ctx, input }) => {
 		const collection = await ctx.db
-			.select({
-				...getTableColumns(collections),
-			})
+			.select(getTableColumns(collections))
 			.from(collections)
 			.where(eq(collections.slug, input))
 			.then((rows) => rows[0]);
 
 		if (!collection)
 			throw new TRPCError({
-				code: "BAD_REQUEST",
+				code: "NOT_FOUND",
 				message: "No collection with slug found",
 			});
-
-		const photosData = await ctx.db
-			.select({
-				...getTableColumns(photos),
-				cameraName: cameras.name,
-				lensName: lenses.name,
-			})
-			.from(photos)
-			.leftJoin(cameras, eq(photos.cameraId, cameras.id))
-			.leftJoin(lenses, eq(photos.lensId, lenses.id))
-			.where(eq(photos.collectionId, collection.id));
 
 		if (!collection.thumbnailPhotoURL) {
 			collection.thumbnailPhotoURL = await getLatestPhoto(collection.id);
 		}
 
-		return {
-			...collection,
-			photos: photosData,
-		};
+		return collection;
 	}),
 
 	withPhotos: publicProcedure

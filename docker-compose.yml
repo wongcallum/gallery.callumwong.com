@@ -8,6 +8,7 @@ services:
       POSTGRES_DB: gallery
     ports:
       - 54322:5432 # run docker compose up db -d for a development database
+    # reset: docker compose down -v
     volumes:
       - pgdata:/var/lib/postgresql
     healthcheck:

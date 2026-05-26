@@ -57,6 +57,11 @@ export function CreateCollectionDialog({
 				setOpen(false);
 				form.reset();
 			},
+			onError(error) {
+				if (error.data?.code === "CONFLICT") {
+					form.setError("slug", { message: error.message });
+				}
+			},
 		});
 	}
 
@@ -107,18 +112,17 @@ export function EditCollectionDialog({
 
 	async function onSubmit(values: CollectionFormData) {
 		modifyMutation.mutateAsync(
-			{
-				id,
-				name: values.name,
-				slug: values.slug,
-				description: values.description,
-				thumbnailPhotoURL: values.thumbnailPhotoURL,
-			},
+			{ id, ...values },
 			{
 				async onSuccess() {
 					form.reset();
 					setOpen(false);
 					utils.collections.invalidate();
+				},
+				onError(error) {
+					if (error.data?.code === "CONFLICT") {
+						form.setError("slug", { message: error.message });
+					}
 				},
 			},
 		);

@@ -20,14 +20,15 @@ import {
 	protectedProcedure,
 	publicProcedure,
 } from "~/server/api/trpc";
-import { db } from "~/server/db";
+import type { DB } from "~/server/db";
 import { cameras, lenses, photos } from "~/server/db/schema";
 
 async function insertOrSelectLens(
+	tx: DB,
 	model: string,
-): Promise<typeof lenses.$inferInsert | undefined> {
+): Promise<typeof lenses.$inferSelect | undefined> {
 	if (!model) return;
-	const insertedLens = await db
+	const insertedLens = await tx
 		.insert(lenses)
 		.values({
 			name: model,
@@ -39,16 +40,17 @@ async function insertOrSelectLens(
 		return insertedLens[0];
 	}
 
-	return await db.query.lenses.findFirst({
+	return await tx.query.lenses.findFirst({
 		where: (lenses, { eq }) => eq(lenses.name, model),
 	});
 }
 
 async function insertOrSelectCamera(
+	tx: DB,
 	model: string,
-): Promise<typeof cameras.$inferInsert | undefined> {
+): Promise<typeof cameras.$inferSelect | undefined> {
 	if (!model) return;
-	const insertedCamera = await db
+	const insertedCamera = await tx
 		.insert(cameras)
 		.values({
 			name: model,
@@ -60,7 +62,7 @@ async function insertOrSelectCamera(
 		return insertedCamera[0];
 	}
 
-	return await db.query.cameras.findFirst({
+	return await tx.query.cameras.findFirst({
 		where: (cameras, { eq }) => eq(cameras.name, model),
 	});
 }
@@ -137,47 +139,6 @@ export const photoRouter = createTRPCRouter({
 				await thumbnail.metadata();
 			const thumbnailBuffer = await thumbnail.toBuffer();
 
-			// add images to db
-			const newPhoto: typeof photos.$inferInsert = {
-				id,
-				uploadedById: ctx.session.user.id,
-				collectionId: collection?.id,
-				takenAt: new Date(input.image.lastModified),
-				url: `https://s3.${env.AWS_S3_REGION}.amazonaws.com/${env.AWS_S3_BUCKET_NAME}/${id}`,
-				width,
-				height,
-				thumbnailUrl: `https://s3.${env.AWS_S3_REGION}.amazonaws.com/${env.AWS_S3_BUCKET_NAME}/${thumbnailKey}`,
-				thumbnailWidth,
-				thumbnailHeight,
-			};
-
-			const exif = await exifr.parse(image, {
-				pick: [
-					"DateTimeOriginal",
-					"FNumber",
-					"ExposureTime",
-					"Model",
-					"LensModel",
-					"ISO",
-					"FocalLength",
-				],
-			});
-
-			if (exif) {
-				const camera = await insertOrSelectCamera(exif.Model);
-				const lens = await insertOrSelectLens(exif.LensModel);
-
-				if (exif.DateTimeOriginal) newPhoto.takenAt = exif.DateTimeOriginal;
-				newPhoto.aperture = exif.FNumber;
-				newPhoto.shutterSpeed = exif.ExposureTime;
-				newPhoto.cameraId = camera?.id;
-				newPhoto.lensId = lens?.id;
-				newPhoto.isoSpeed = exif.ISO;
-				newPhoto.focalLength = exif.FocalLength;
-			}
-
-			await ctx.db.insert(photos).values(newPhoto);
-
 			// upload images
 			try {
 				await s3Client.send(
@@ -214,6 +175,49 @@ export const photoRouter = createTRPCRouter({
 
 				throw caught;
 			}
+
+			// add images to db
+			const newPhoto: typeof photos.$inferInsert = {
+				id,
+				uploadedById: ctx.session.user.id,
+				collectionId: collection?.id,
+				takenAt: new Date(input.image.lastModified),
+				url: `https://s3.${env.AWS_S3_REGION}.amazonaws.com/${env.AWS_S3_BUCKET_NAME}/${id}`,
+				width,
+				height,
+				thumbnailUrl: `https://s3.${env.AWS_S3_REGION}.amazonaws.com/${env.AWS_S3_BUCKET_NAME}/${thumbnailKey}`,
+				thumbnailWidth,
+				thumbnailHeight,
+			};
+
+			const exif = await exifr.parse(image, {
+				pick: [
+					"DateTimeOriginal",
+					"FNumber",
+					"ExposureTime",
+					"Model",
+					"LensModel",
+					"ISO",
+					"FocalLength",
+				],
+			});
+
+			ctx.db.transaction(async (tx) => {
+				if (exif) {
+					const camera = await insertOrSelectCamera(tx, exif.Model);
+					const lens = await insertOrSelectLens(tx, exif.LensModel);
+
+					if (exif.DateTimeOriginal) newPhoto.takenAt = exif.DateTimeOriginal;
+					newPhoto.aperture = exif.FNumber;
+					newPhoto.shutterSpeed = exif.ExposureTime;
+					newPhoto.cameraId = camera?.id;
+					newPhoto.lensId = lens?.id;
+					newPhoto.isoSpeed = exif.ISO;
+					newPhoto.focalLength = exif.FocalLength;
+				}
+
+				await tx.insert(photos).values(newPhoto);
+			});
 		}),
 
 	count: publicProcedure.input(filterInput).query(async ({ ctx, input }) => {

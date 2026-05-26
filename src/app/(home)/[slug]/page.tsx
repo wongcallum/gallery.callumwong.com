@@ -88,11 +88,11 @@ export default function CollectionPage() {
 	if (!collection) {
 		return (
 			<div className="w-full p-4">
-				<p className="text-muted-foreground">Collection not found</p>
 				<Button variant="ghost" size="sm" onClick={() => router.push("/")}>
 					<ArrowLeft className="mr-1 h-4 w-4" />
 					Back
 				</Button>
+				<p className="text-muted-foreground">Collection not found</p>
 			</div>
 		);
 	}

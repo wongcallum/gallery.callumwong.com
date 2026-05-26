@@ -199,11 +199,7 @@ export const collectionRouter = createTRPCRouter({
 			.where(eq(collections.slug, input))
 			.then((rows) => rows[0]);
 
-		if (!collection)
-			throw new TRPCError({
-				code: "NOT_FOUND",
-				message: "No collection with slug found",
-			});
+		if (!collection) return null;
 
 		if (!collection.thumbnailPhotoURL) {
 			collection.thumbnailPhotoURL = await getLatestPhoto(collection.id);

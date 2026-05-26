@@ -77,6 +77,7 @@ export default function CollectionPage() {
 				<Skeleton className="mb-4 h-6 w-60 rounded-md" />
 				<div className="grid grid-cols-1 gap-4 md:grid-cols-2 2xl:grid-cols-4">
 					{Array.from({ length: 6 }, (_, i) => (
+						// biome-ignore lint/suspicious/noArrayIndexKey: skeleton
 						<Skeleton key={i} className="aspect-3/2 rounded-md" />
 					))}
 				</div>
@@ -123,6 +124,7 @@ export default function CollectionPage() {
 			) : (
 				<div className="grid grid-cols-1 gap-4 md:grid-cols-2 2xl:grid-cols-4">
 					{Array.from({ length: 6 }, (_, i) => (
+						// biome-ignore lint/suspicious/noArrayIndexKey: skeleton
 						<Skeleton key={i} className="aspect-3/2 rounded-md" />
 					))}
 				</div>
@@ -140,9 +142,10 @@ export default function CollectionPage() {
 								}}
 							/>
 						</PaginationItem>
-						{Array(Math.ceil(countData / PAGE_SIZE))
-							.fill(null)
-							.map((_value, index) => (
+						{Array.from(
+							{ length: Math.ceil(countData / PAGE_SIZE) },
+							(_, index) => (
+								// biome-ignore lint/suspicious/noArrayIndexKey: order of pages will not change
 								<PaginationItem key={index}>
 									<PaginationLink
 										href="#"
@@ -154,7 +157,8 @@ export default function CollectionPage() {
 										{index + 1}
 									</PaginationLink>
 								</PaginationItem>
-							))}
+							),
+						)}
 						<PaginationItem>
 							<PaginationNext
 								href="#"

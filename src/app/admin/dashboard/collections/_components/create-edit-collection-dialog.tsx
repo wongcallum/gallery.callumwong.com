@@ -2,6 +2,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { Check, X } from "lucide-react";
 import { useMemo, useState } from "react";
 import { type UseFormReturn, useForm } from "react-hook-form";
+import slugify from "slugify";
 import type z from "zod";
 import { Button } from "~/components/ui/button";
 import {
@@ -21,7 +22,6 @@ import {
 } from "~/components/ui/form";
 import { Input } from "~/components/ui/input";
 import { createCollectionSchema } from "~/lib/schemas";
-import slugify from "slugify";
 import { cn } from "~/lib/utils";
 import { api } from "~/trpc/react";
 
@@ -190,7 +190,11 @@ function CollectionDialog({
 								<FormItem className="grid grid-cols-4 items-center gap-4">
 									<FormLabel>Slug</FormLabel>
 									<FormControl>
-										<Input className="col-span-3" {...field} placeholder={slugPlaceholder} />
+										<Input
+											className="col-span-3"
+											{...field}
+											placeholder={slugPlaceholder}
+										/>
 									</FormControl>
 									<FormMessage />
 								</FormItem>

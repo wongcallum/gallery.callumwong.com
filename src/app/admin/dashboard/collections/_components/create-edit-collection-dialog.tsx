@@ -1,6 +1,6 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Check, X } from "lucide-react";
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { type UseFormReturn, useForm } from "react-hook-form";
 import type z from "zod";
 import { Button } from "~/components/ui/button";
@@ -21,7 +21,7 @@ import {
 } from "~/components/ui/form";
 import { Input } from "~/components/ui/input";
 import { createCollectionSchema } from "~/lib/schemas";
-import { cn } from "~/lib/utils";
+import { cn, slugify } from "~/lib/utils";
 import { api } from "~/trpc/react";
 
 type CollectionFormData = z.infer<typeof createCollectionSchema>;
@@ -42,9 +42,13 @@ export function CreateCollectionDialog({
 		resolver: zodResolver(createCollectionSchema),
 		defaultValues: {
 			name: "",
+			slug: "",
 			description: "",
 		},
 	});
+
+	const name = form.watch("name");
+	const slugPlaceholder = useMemo(() => (name ? slugify(name) : ""), [name]);
 
 	async function onSubmit(values: CollectionFormData) {
 		createMutation.mutateAsync(values, {
@@ -52,6 +56,11 @@ export function CreateCollectionDialog({
 				await utils.collections.invalidate();
 				setOpen(false);
 				form.reset();
+			},
+			onError(error) {
+				if (error.data?.code === "CONFLICT") {
+					form.setError("slug", { message: error.message });
+				}
 			},
 		});
 	}
@@ -64,6 +73,7 @@ export function CreateCollectionDialog({
 			form={form}
 			onSubmit={onSubmit}
 			isPending={createMutation.isPending}
+			slugPlaceholder={slugPlaceholder}
 		/>
 	);
 }
@@ -71,6 +81,7 @@ export function CreateCollectionDialog({
 interface EditCollectionDialogProps {
 	id: number;
 	name: string;
+	slug: string;
 	description: string;
 	thumbnailPhotoURL: string | null;
 	open: boolean;
@@ -79,8 +90,9 @@ interface EditCollectionDialogProps {
 
 export function EditCollectionDialog({
 	id,
-	name,
-	description,
+	name: initialName,
+	slug: initialSlug,
+	description: initialDescription,
 	thumbnailPhotoURL,
 	open,
 	setOpen,
@@ -90,22 +102,27 @@ export function EditCollectionDialog({
 
 	const form = useForm<CollectionFormData>({
 		resolver: zodResolver(createCollectionSchema),
-		values: { name, description, thumbnailPhotoURL },
+		values: {
+			name: initialName,
+			slug: initialSlug,
+			description: initialDescription,
+			thumbnailPhotoURL,
+		},
 	});
 
 	async function onSubmit(values: CollectionFormData) {
 		modifyMutation.mutateAsync(
-			{
-				id,
-				name: values.name,
-				description: values.description,
-				thumbnailPhotoURL: values.thumbnailPhotoURL,
-			},
+			{ id, ...values },
 			{
 				async onSuccess() {
 					form.reset();
 					setOpen(false);
 					utils.collections.invalidate();
+				},
+				onError(error) {
+					if (error.data?.code === "CONFLICT") {
+						form.setError("slug", { message: error.message });
+					}
 				},
 			},
 		);
@@ -120,6 +137,7 @@ export function EditCollectionDialog({
 			onSubmit={onSubmit}
 			isPending={modifyMutation.isPending}
 			collectionId={id}
+			slugPlaceholder={initialSlug}
 		/>
 	);
 }
@@ -132,6 +150,7 @@ interface CollectionDialogProps {
 	onSubmit: (values: CollectionFormData) => Promise<void>;
 	isPending: boolean;
 	collectionId?: number;
+	slugPlaceholder?: string;
 }
 
 function CollectionDialog({
@@ -142,6 +161,7 @@ function CollectionDialog({
 	onSubmit,
 	isPending,
 	collectionId,
+	slugPlaceholder,
 }: CollectionDialogProps) {
 	return (
 		<Dialog open={open} onOpenChange={setOpen}>
@@ -159,6 +179,23 @@ function CollectionDialog({
 									<FormLabel>Name</FormLabel>
 									<FormControl>
 										<Input className="col-span-3" {...field} />
+									</FormControl>
+									<FormMessage />
+								</FormItem>
+							)}
+						/>
+						<FormField
+							control={form.control}
+							name="slug"
+							render={({ field }) => (
+								<FormItem className="grid grid-cols-4 items-center gap-4">
+									<FormLabel>Slug</FormLabel>
+									<FormControl>
+										<Input
+											className="col-span-3"
+											{...field}
+											placeholder={slugPlaceholder}
+										/>
 									</FormControl>
 									<FormMessage />
 								</FormItem>

@@ -1,4 +1,5 @@
 import { type ClassValue, clsx } from "clsx";
+import slugifyLib from "slugify";
 import { twMerge } from "tailwind-merge";
 
 export function cn(...inputs: ClassValue[]) {
@@ -17,4 +18,11 @@ export function shutterSpeedString(speed: number | null) {
 export function apertureString(fStop: number | null) {
 	if (!fStop || fStop === 0) return "f/00";
 	return `f/${fStop.toFixed(1)}`;
+}
+
+export function slugify(input: string) {
+	return slugifyLib(input, {
+		lower: true,
+		strict: true,
+	});
 }

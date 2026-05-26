@@ -10,6 +10,7 @@ export const collections = createTable(
 			.notNull()
 			.references(() => user.id),
 		name: d.text().notNull(),
+		slug: d.text().notNull().unique(),
 		description: d.text().default("").notNull(),
 		thumbnailPhotoURL: d.text(),
 		createdAt: d.timestamp().defaultNow().notNull(),

@@ -1,20 +1,31 @@
 import { TRPCError } from "@trpc/server";
-import { asc, count, desc, eq, getTableColumns, inArray } from "drizzle-orm";
+import {
+	and,
+	asc,
+	count,
+	desc,
+	eq,
+	getTableColumns,
+	inArray,
+	ne,
+	type SQL,
+} from "drizzle-orm";
 import { z } from "zod";
 import { computeNewOrder, MAX_ORDER } from "~/lib/ordering";
 import { deletePhoto } from "~/lib/s3";
 import { createCollectionSchema } from "~/lib/schemas";
+import { slugify } from "~/lib/utils";
 
 import {
 	createTRPCRouter,
 	protectedProcedure,
 	publicProcedure,
 } from "~/server/api/trpc";
-import { db } from "~/server/db";
+import type { DB } from "~/server/db";
 import { cameras, collections, lenses, photos } from "~/server/db/schema";
 
-async function getLatestPhoto(collectionId: number) {
-	const latestPhoto = await db
+async function getLatestPhoto(tx: DB, collectionId: number) {
+	const latestPhoto = await tx
 		.select({ url: photos.thumbnailUrl })
 		.from(photos)
 		.where(eq(photos.collectionId, collectionId))
@@ -24,10 +35,31 @@ async function getLatestPhoto(collectionId: number) {
 	return latestPhoto[0]?.url || null;
 }
 
+async function checkSlugAvailable(tx: DB, slug: string, excludedId?: number) {
+	const filters: SQL[] = [eq(collections.slug, slug)];
+	if (excludedId) filters.push(ne(collections.id, excludedId));
+
+	const [existing] = await tx
+		.select({ id: collections.id })
+		.from(collections)
+		.where(and(...filters))
+		.limit(1);
+
+	if (existing) {
+		throw new TRPCError({
+			code: "CONFLICT",
+			message: "That slug is already taken!",
+		});
+	}
+}
+
 export const collectionRouter = createTRPCRouter({
 	create: protectedProcedure
 		.input(createCollectionSchema)
 		.mutation(async ({ ctx, input }) => {
+			const slug = input.slug || slugify(input.name);
+			await checkSlugAvailable(ctx.db, slug);
+
 			const [first] = await ctx.db
 				.select({ displayOrder: collections.displayOrder })
 				.from(collections)
@@ -48,6 +80,7 @@ export const collectionRouter = createTRPCRouter({
 
 			await ctx.db.insert(collections).values({
 				name: input.name,
+				slug,
 				description: input.description,
 				thumbnailPhotoURL: input.thumbnailPhotoURL ?? undefined,
 				createdById: ctx.session.user.id,
@@ -62,10 +95,14 @@ export const collectionRouter = createTRPCRouter({
 			}),
 		)
 		.mutation(async ({ ctx, input }) => {
+			const slug = input.slug || slugify(input.name);
+			await checkSlugAvailable(ctx.db, slug, input.id);
+
 			await ctx.db
 				.update(collections)
 				.set({
 					name: input.name,
+					slug,
 					description: input.description,
 					thumbnailPhotoURL: input.thumbnailPhotoURL ?? null,
 				})
@@ -184,9 +221,29 @@ export const collectionRouter = createTRPCRouter({
 			allCollections.map(async (collection) => ({
 				...collection,
 				displayThumbnailURL:
-					collection.thumbnailPhotoURL ?? (await getLatestPhoto(collection.id)),
+					collection.thumbnailPhotoURL ??
+					(await getLatestPhoto(ctx.db, collection.id)),
 			})),
 		);
+	}),
+
+	bySlug: publicProcedure.input(z.string()).query(async ({ ctx, input }) => {
+		const collection = await ctx.db
+			.select(getTableColumns(collections))
+			.from(collections)
+			.where(eq(collections.slug, input))
+			.then((rows) => rows[0]);
+
+		if (!collection) return null;
+
+		if (!collection.thumbnailPhotoURL) {
+			collection.thumbnailPhotoURL = await getLatestPhoto(
+				ctx.db,
+				collection.id,
+			);
+		}
+
+		return collection;
 	}),
 
 	withPhotos: publicProcedure
@@ -218,7 +275,10 @@ export const collectionRouter = createTRPCRouter({
 				.where(eq(photos.collectionId, input));
 
 			if (!collection.thumbnailPhotoURL) {
-				collection.thumbnailPhotoURL = await getLatestPhoto(collection.id);
+				collection.thumbnailPhotoURL = await getLatestPhoto(
+					ctx.db,
+					collection.id,
+				);
 			}
 
 			return {

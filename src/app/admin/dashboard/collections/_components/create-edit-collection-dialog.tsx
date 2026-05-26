@@ -96,13 +96,11 @@ export function EditCollectionDialog({
 	const utils = api.useUtils();
 	const modifyMutation = api.collections.modify.useMutation();
 
-	const slugPlaceholder = useMemo(() => initialSlug, [initialSlug]);
-
 	const form = useForm<CollectionFormData>({
 		resolver: zodResolver(createCollectionSchema),
 		values: {
 			name: initialName,
-			slug: "",
+			slug: initialSlug,
 			description: initialDescription,
 			thumbnailPhotoURL,
 		},
@@ -136,7 +134,7 @@ export function EditCollectionDialog({
 			onSubmit={onSubmit}
 			isPending={modifyMutation.isPending}
 			collectionId={id}
-			slugPlaceholder={slugPlaceholder}
+			slugPlaceholder={initialSlug}
 		/>
 	);
 }

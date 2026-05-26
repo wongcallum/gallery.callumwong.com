@@ -1,5 +1,5 @@
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Check, X } from "lucide-react";
+import { X } from "lucide-react";
 import { useMemo, useState } from "react";
 import { type UseFormReturn, useForm } from "react-hook-form";
 import type z from "zod";
@@ -305,32 +305,28 @@ function ThumbnailPhotoPicker({
 					) : (
 						<div className="grid max-h-96 grid-cols-4 gap-2 overflow-y-auto">
 							{photos.map((photo) => (
-								<button
-									type="button"
-									key={photo.id}
-									className={cn(
-										"relative aspect-square overflow-hidden rounded-md border-2",
-										value === photo.thumbnailUrl
-											? "border-primary"
-											: "border-transparent hover:border-muted-foreground/40",
-									)}
-									onClick={() => {
-										onChange(photo.thumbnailUrl);
-										setOpen(false);
-									}}
-								>
-									{/* biome-ignore lint/performance/noImgElement: S3 images */}
-									<img
-										src={photo.thumbnailUrl}
-										alt=""
-										className="h-full w-full object-cover"
-									/>
-									{value === photo.thumbnailUrl && (
-										<div className="absolute top-1 right-1 rounded-full bg-primary p-0.5">
-											<Check className="h-3 w-3 text-primary-foreground" />
-										</div>
-									)}
-								</button>
+								<div key={photo.id} className="relative aspect-square">
+									<button
+										type="button"
+										className={cn(
+											"absolute inset-0 overflow-hidden rounded-md border-2",
+											value === photo.thumbnailUrl
+												? "border-primary"
+												: "border-transparent",
+										)}
+										onClick={() => {
+											onChange(photo.thumbnailUrl);
+											setOpen(false);
+										}}
+									>
+										{/* biome-ignore lint/performance/noImgElement: S3 images */}
+										<img
+											src={photo.thumbnailUrl}
+											alt=""
+											className="h-full w-full object-cover"
+										/>
+									</button>
+								</div>
 							))}
 						</div>
 					)}

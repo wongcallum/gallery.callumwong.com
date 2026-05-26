@@ -41,6 +41,7 @@ export function CollectionTableActions({
 			<EditCollectionDialog
 				id={collection.id}
 				name={collection.name}
+				slug={collection.slug}
 				description={collection.description}
 				thumbnailPhotoURL={collection.thumbnailPhotoURL}
 				open={editOpen}

@@ -8,6 +8,7 @@ export const importPhotoSchema = z.object({
 
 export const createCollectionSchema = z.object({
 	name: z.string().min(1),
+	slug: z.string().optional(),
 	description: z.string().optional(),
 	thumbnailPhotoURL: z.string().nullish(),
 });

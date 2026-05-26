@@ -7,6 +7,7 @@ import { CollectionTableActions } from "./_components/collection-table-actions";
 export type Collection = {
 	id: number;
 	name: string;
+	slug: string;
 	description: string;
 	photoCount: number;
 	thumbnailPhotoURL: string | null;

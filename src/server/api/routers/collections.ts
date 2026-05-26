@@ -4,6 +4,7 @@ import { z } from "zod";
 import { computeNewOrder, MAX_ORDER } from "~/lib/ordering";
 import { deletePhoto } from "~/lib/s3";
 import { createCollectionSchema } from "~/lib/schemas";
+import slugify from "slugify";
 
 import {
 	createTRPCRouter,
@@ -48,6 +49,7 @@ export const collectionRouter = createTRPCRouter({
 
 			await ctx.db.insert(collections).values({
 				name: input.name,
+				slug: input.slug || slugify(input.name),
 				description: input.description,
 				thumbnailPhotoURL: input.thumbnailPhotoURL ?? undefined,
 				createdById: ctx.session.user.id,
@@ -66,6 +68,7 @@ export const collectionRouter = createTRPCRouter({
 				.update(collections)
 				.set({
 					name: input.name,
+					slug: input.slug || slugify(input.name),
 					description: input.description,
 					thumbnailPhotoURL: input.thumbnailPhotoURL ?? null,
 				})
@@ -187,6 +190,42 @@ export const collectionRouter = createTRPCRouter({
 					collection.thumbnailPhotoURL ?? (await getLatestPhoto(collection.id)),
 			})),
 		);
+	}),
+
+	bySlug: publicProcedure.input(z.string()).query(async ({ ctx, input }) => {
+		const collection = await ctx.db
+			.select({
+				...getTableColumns(collections),
+			})
+			.from(collections)
+			.where(eq(collections.slug, input))
+			.then((rows) => rows[0]);
+
+		if (!collection)
+			throw new TRPCError({
+				code: "BAD_REQUEST",
+				message: "No collection with slug found",
+			});
+
+		const photosData = await ctx.db
+			.select({
+				...getTableColumns(photos),
+				cameraName: cameras.name,
+				lensName: lenses.name,
+			})
+			.from(photos)
+			.leftJoin(cameras, eq(photos.cameraId, cameras.id))
+			.leftJoin(lenses, eq(photos.lensId, lenses.id))
+			.where(eq(photos.collectionId, collection.id));
+
+		if (!collection.thumbnailPhotoURL) {
+			collection.thumbnailPhotoURL = await getLatestPhoto(collection.id);
+		}
+
+		return {
+			...collection,
+			photos: photosData,
+		};
 	}),
 
 	withPhotos: publicProcedure

@@ -24,7 +24,6 @@ export function DeletePhotoButton() {
 	const onDelete = async () => {
 		mutation.mutateAsync(id, {
 			async onSuccess() {
-				await utils.collections.withPhotos.invalidate();
 				await utils.collections.all.invalidate();
 				setOpen(false);
 			},

@@ -22,7 +22,7 @@ import {
 	publicProcedure,
 } from "~/server/api/trpc";
 import type { DB } from "~/server/db";
-import { cameras, collections, lenses, photos } from "~/server/db/schema";
+import { collections, photos } from "~/server/db/schema";
 
 async function getLatestPhoto(tx: DB, collectionId: number) {
 	const latestPhoto = await tx
@@ -245,45 +245,4 @@ export const collectionRouter = createTRPCRouter({
 
 		return collection;
 	}),
-
-	withPhotos: publicProcedure
-		.input(z.number())
-		.query(async ({ ctx, input }) => {
-			const collection = await ctx.db
-				.select({
-					...getTableColumns(collections),
-				})
-				.from(collections)
-				.where(eq(collections.id, input))
-				.then((rows) => rows[0]);
-
-			if (!collection)
-				throw new TRPCError({
-					code: "BAD_REQUEST",
-					message: "No collection with id found",
-				});
-
-			const photosData = await ctx.db
-				.select({
-					...getTableColumns(photos),
-					cameraName: cameras.name,
-					lensName: lenses.name,
-				})
-				.from(photos)
-				.leftJoin(cameras, eq(photos.cameraId, cameras.id))
-				.leftJoin(lenses, eq(photos.lensId, lenses.id))
-				.where(eq(photos.collectionId, input));
-
-			if (!collection.thumbnailPhotoURL) {
-				collection.thumbnailPhotoURL = await getLatestPhoto(
-					ctx.db,
-					collection.id,
-				);
-			}
-
-			return {
-				...collection,
-				photos: photosData,
-			};
-		}),
 });

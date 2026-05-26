@@ -36,7 +36,6 @@ export function EditPhotoButton() {
 	});
 	const mutation = api.photos.edit.useMutation({
 		async onSuccess() {
-			await utils.collections.withPhotos.invalidate();
 			await utils.collections.all.invalidate();
 			await existingPhoto.refetch();
 		},
